@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.ui.auth.state.LoginFields
 import com.codingwithmitch.openapi.util.ApiEmptyResponse
 import com.codingwithmitch.openapi.util.ApiErrorResponse
@@ -33,7 +34,7 @@ class LoginFragment : BaseAuthFragment() {
         subscribeToObservers()
     }
 
-    fun subscribeToObservers() {
+    private fun subscribeToObservers() {
         viewModel.viewState.observe(viewLifecycleOwner, Observer { authViewState ->
             authViewState.loginFields?.let { loginFields ->
                 loginFields.loginEmail?.let { email ->
