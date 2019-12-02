@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.ui.auth.state.AuthStateEvent
 import com.codingwithmitch.openapi.ui.auth.state.RegistrationFields
 import com.codingwithmitch.openapi.util.ApiEmptyResponse
 import com.codingwithmitch.openapi.util.ApiErrorResponse
@@ -34,9 +35,13 @@ class RegisterFragment : BaseAuthFragment() {
         Log.d(TAG, "RegisterFragment: ${viewModel.hashCode()}")
 
         subscribeToObservers()
+
+        register_button.setOnClickListener {
+            registration()
+        }
     }
 
-    fun subscribeToObservers() {
+    private fun subscribeToObservers() {
         viewModel.viewState.observe(viewLifecycleOwner, Observer { authViewState ->
             authViewState.registrationFields?.let { registrationFields ->
                 registrationFields.registrationEmail?.let { email ->
@@ -53,6 +58,15 @@ class RegisterFragment : BaseAuthFragment() {
                 }
             }
         })
+    }
+
+    private fun registration() {
+        viewModel.setStateEvent(AuthStateEvent.RegistrationAttempEvent(
+            input_email.text.toString(),
+            input_username.text.toString(),
+            input_password.text.toString(),
+            input_password_confirm.text.toString()
+        ))
     }
 
     override fun onDestroyView() {

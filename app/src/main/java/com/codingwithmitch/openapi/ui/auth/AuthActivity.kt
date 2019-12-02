@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.di.ViewModelProviderFactory
 import com.codingwithmitch.openapi.ui.BaseActivity
+import com.codingwithmitch.openapi.ui.ResponseType
+import com.codingwithmitch.openapi.ui.ResponseType.*
 import com.codingwithmitch.openapi.ui.dashboard.DashboardActivity
 import javax.inject.Inject
 
@@ -27,18 +29,52 @@ class AuthActivity : BaseActivity(){
         subscribeObservers()
     }
 
-    fun subscribeObservers() {
-        viewModel.viewState.observe(this, Observer {
-            it.authToken?.let {
+    private fun subscribeObservers(){
+
+        viewModel.dataState.observe(this, Observer { dataState ->
+            dataState.data?.let { data ->
+                data.data?.let { event ->
+                    event.getContentIfNotHandled()?.let {
+                        it.authToken?.let {
+                            Log.d(TAG, "AuthActivity, DataState: ${it}")
+                            viewModel.setAuthToken(it)
+                        }
+                    }
+                }
+                data.response?.let {event ->
+                    event.getContentIfNotHandled()?.let{
+                        when(it.responseType){
+                            is Dialog ->{
+                                // show dialog
+                            }
+
+                            is Toast ->{
+                                // show toast
+                            }
+
+                            is None ->{
+                                // print to log
+                                Log.e(TAG, "AuthActivity: Response: ${it.message}, ${it.responseType}" )
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        viewModel.viewState.observe(this, Observer{
+            Log.d(TAG, "AuthActivity, subscribeObservers: AuthViewState: ${it}")
+            it.authToken?.let{
                 sessionManager.login(it)
             }
         })
 
-        sessionManager.cachedToken.observe(this, Observer { authToken ->
-            Log.d(TAG, "subscribeObservers: AuthToken: $authToken")
-
-            if (authToken != null && authToken.account_pk != -1 && authToken.token != null) {
-                navToDashboardActivity()
+        sessionManager.cachedToken.observe(this, Observer{ dataState ->
+            Log.d(TAG, "AuthActivity, subscribeObservers: AuthDataState: ${dataState}")
+            dataState.let{ authToken ->
+                if(authToken != null && authToken.account_pk != -1 && authToken.token != null){
+                    navToDashboardActivity()
+                }
             }
         })
     }

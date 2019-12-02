@@ -11,6 +11,7 @@ import androidx.lifecycle.Observer
 
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.models.AuthToken
+import com.codingwithmitch.openapi.ui.auth.state.AuthStateEvent
 import com.codingwithmitch.openapi.ui.auth.state.LoginFields
 import com.codingwithmitch.openapi.util.ApiEmptyResponse
 import com.codingwithmitch.openapi.util.ApiErrorResponse
@@ -32,6 +33,19 @@ class LoginFragment : BaseAuthFragment() {
         Log.d(TAG, "LoginFragment: ${viewModel.hashCode()}")
 
         subscribeToObservers()
+
+        login_button.setOnClickListener {
+            login()
+        }
+    }
+
+    private fun login() {
+        viewModel.setStateEvent(
+            AuthStateEvent.LoginAttemptEvent(
+                input_email.text.toString(),
+                input_password.text.toString()
+            )
+        )
     }
 
     private fun subscribeToObservers() {
