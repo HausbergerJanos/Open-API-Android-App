@@ -14,8 +14,10 @@ import retrofit2.http.POST
 interface ApiAuthService {
 
     @POST("account/login")
+    @FormUrlEncoded
     fun login(
-        @Body loginRequest: LoginRequest
+        @Field("username") email: String,
+        @Field("password") password: String
     ): LiveData<GenericApiResponse<LoginResponse>>
 
     @POST("account/register")

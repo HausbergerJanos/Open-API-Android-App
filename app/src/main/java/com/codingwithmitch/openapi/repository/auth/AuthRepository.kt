@@ -3,7 +3,6 @@ package com.codingwithmitch.openapi.repository.auth
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.switchMap
 import com.codingwithmitch.openapi.api.auth.ApiAuthService
 import com.codingwithmitch.openapi.api.auth.request.LoginRequest
 import com.codingwithmitch.openapi.api.auth.request.RegistrationRequest
@@ -23,7 +22,6 @@ import com.codingwithmitch.openapi.ui.auth.state.LoginFields
 import com.codingwithmitch.openapi.ui.auth.state.RegistrationFields
 import com.codingwithmitch.openapi.util.*
 import com.codingwithmitch.openapi.util.ErrorHandling.Companion.ERROR_SAVE_AUTH_TOKEN
-import com.codingwithmitch.openapi.util.ErrorHandling.Companion.ERROR_UNKNOWN
 import com.codingwithmitch.openapi.util.ErrorHandling.Companion.GENERIC_AUTH_ERROR
 import com.codingwithmitch.openapi.util.SuccessHandling.Companion.RESPONSE_CHECK_PREVIOUS_AUTH_USER_DONE
 import kotlinx.coroutines.Job
@@ -100,7 +98,7 @@ constructor(
             }
 
             override fun createCall(): LiveData<GenericApiResponse<LoginResponse>> {
-                return apiAuthService.login(loginRequest)
+                return apiAuthService.login(loginRequest.email, loginRequest.password)
             }
 
             override fun setJob(job: Job) {
