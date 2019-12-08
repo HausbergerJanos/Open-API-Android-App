@@ -1,5 +1,6 @@
 package com.codingwithmitch.openapi.di.auth
 
+import android.content.SharedPreferences
 import com.codingwithmitch.openapi.api.auth.ApiAuthService
 import com.codingwithmitch.openapi.persistance.AccountPropertiesDao
 import com.codingwithmitch.openapi.persistance.AuthTokenDao
@@ -26,13 +27,17 @@ class AuthModule{
         sessionManager: SessionManager,
         authTokenDao: AuthTokenDao,
         accountPropertiesDao: AccountPropertiesDao,
-        openApiAuthService: ApiAuthService
+        openApiAuthService: ApiAuthService,
+        sharedPreferences: SharedPreferences,
+        editor: SharedPreferences.Editor
     ): AuthRepository {
         return AuthRepository(
             authTokenDao,
             accountPropertiesDao,
             openApiAuthService,
-            sessionManager
+            sessionManager,
+            sharedPreferences,
+            editor
         )
     }
 

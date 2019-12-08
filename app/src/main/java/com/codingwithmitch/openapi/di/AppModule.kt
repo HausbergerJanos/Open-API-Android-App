@@ -1,6 +1,8 @@
 package com.codingwithmitch.openapi.di
 
 import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -12,7 +14,9 @@ import com.codingwithmitch.openapi.persistance.AppDatabase
 import com.codingwithmitch.openapi.persistance.AppDatabase.Companion.DATABASE_NAME
 import com.codingwithmitch.openapi.persistance.AuthTokenDao
 import com.codingwithmitch.openapi.util.Constants
+import com.codingwithmitch.openapi.util.Constants.Constants.*
 import com.codingwithmitch.openapi.util.LiveDataCallAdapterFactory
+import com.codingwithmitch.openapi.util.PreferenceKeys
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -26,6 +30,18 @@ import javax.inject.Singleton
 
 @Module
 class AppModule{
+
+    @Singleton
+    @Provides
+    fun provideSharedPreferences(application: Application): SharedPreferences {
+        return application.getSharedPreferences(PreferenceKeys.APP_PREFERENCES, Context.MODE_PRIVATE)
+    }
+
+    @Singleton
+    @Provides
+    fun provideSharedPreferencesEditor(sharedPreferences: SharedPreferences): SharedPreferences.Editor {
+        return sharedPreferences.edit()
+    }
 
     @Singleton
     @Provides
@@ -51,7 +67,7 @@ class AppModule{
         }
 
         return Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
+            .baseUrl(Constants.Constants.BASE_URL)
             .addCallAdapterFactory(LiveDataCallAdapterFactory())
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClientBuilder.build())

@@ -22,7 +22,7 @@ import javax.inject.Inject
 class AuthViewModel
 @Inject
 constructor(
-    val authRepository: AuthRepository
+    private val authRepository: AuthRepository
 ) : BaseViewModel<AuthStateEvent, AuthViewState>() {
 
     override fun initNewViewState(): AuthViewState {
@@ -51,7 +51,7 @@ constructor(
             }
 
             is CheckPreviousAuthEvent -> {
-                AbsentLiveData.create()
+                return authRepository.checkPrevAuthUser()
             }
         }
     }
@@ -84,5 +84,14 @@ constructor(
 
         update.authToken = authToken
         _viewState.value = update
+    }
+
+    fun cancelActiveJobs() {
+        authRepository.cancelActiveJobs()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        authRepository.cancelActiveJobs()
     }
 }
