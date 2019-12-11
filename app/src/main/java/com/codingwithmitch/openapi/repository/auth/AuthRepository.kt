@@ -49,15 +49,30 @@ constructor(
             return returnErrorResponse(loginFieldsErrors, ResponseType.Dialog())
         }
 
-        return object: NetworkBoundResource<LoginResponse, AuthViewState>(
+        return object: NetworkBoundResource<LoginResponse, Any, AuthViewState>(
             sessionManager.isConnectedToTheInternet(),
-            true) {
+            true,
+            false) {
+
+            // Not used in this case
+            override fun loadFromCache(): LiveData<AuthViewState> {
+                return AbsentLiveData.create()
+            }
+
+            // Not used in this case
+            override suspend fun updateLocalDb(cacheObject: Any?) {
+
+            }
+
             override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<LoginResponse>) {
                 Log.d(TAG, "handleApiSuccessResponse: $response")
 
                 // Incorrect login credentials counts as 200 response from server, so need to handle that
                 if (response.body.response == GENERIC_AUTH_ERROR) {
-                    return onErrorReturn(response.body.errorMessage, true, false)
+                    return onErrorReturn(response.body.errorMessage,
+                        shouldUseDialog = true,
+                        shouldUseToast = false
+                    )
                 }
 
                 // Don't cara about result. Just insert if it doesn't exist because foreign key relationship
@@ -106,7 +121,7 @@ constructor(
                 repositoryJob = job
             }
 
-            // Ignore in this case
+            // Not used in this case
             override suspend fun createCacheRequestAndReturn() {
 
             }
@@ -120,15 +135,30 @@ constructor(
             return returnErrorResponse(registrationFieldsErrors, ResponseType.Dialog())
         }
 
-        return object: NetworkBoundResource<RegistrationResponse, AuthViewState>(
+        return object: NetworkBoundResource<RegistrationResponse, Any, AuthViewState>(
             sessionManager.isConnectedToTheInternet(),
-            true) {
+            true,
+            false) {
+
+            // Not used in this case
+            override fun loadFromCache(): LiveData<AuthViewState> {
+                return AbsentLiveData.create()
+            }
+
+            // Not used in this case
+            override suspend fun updateLocalDb(cacheObject: Any?) {
+
+            }
+
             override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<RegistrationResponse>) {
                 Log.d(TAG, "handleApiSuccessResponse: $response")
 
                 // Incorrect login credentials counts as 200 response from server, so need to handle that
-                if (response.body.response.equals(GENERIC_AUTH_ERROR)) {
-                    return onErrorReturn(response.body.errorMessage, true, false)
+                if (response.body.response == GENERIC_AUTH_ERROR) {
+                    return onErrorReturn(response.body.errorMessage,
+                        shouldUseDialog = true,
+                        shouldUseToast = false
+                    )
                 }
 
                 // Don't cara about result. Just insert if it doesn't exist because foreign key relationship
@@ -193,10 +223,21 @@ constructor(
             return returnNoTokenFound()
         }
 
-        return object: NetworkBoundResource<Void, AuthViewState>(
+        return object: NetworkBoundResource<Void, Any, AuthViewState>(
             sessionManager.isConnectedToTheInternet(),
+            false,
             false
         ) {
+
+            // Not used in this case
+            override fun loadFromCache(): LiveData<AuthViewState> {
+                return AbsentLiveData.create()
+            }
+
+            // Not used in this case
+            override suspend fun updateLocalDb(cacheObject: Any?) {
+
+            }
 
             override suspend fun createCacheRequestAndReturn() {
                 accountPropertiesDao.searchByEmail(prevAuthUserEmail).let { accountProperties ->
