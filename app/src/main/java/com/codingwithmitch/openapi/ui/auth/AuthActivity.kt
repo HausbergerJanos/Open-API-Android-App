@@ -47,7 +47,7 @@ class AuthActivity : BaseActivity(), OnDestinationChangedListener {
                 data.data?.let { event ->
                     event.getContentIfNotHandled()?.let {
                         it.authToken?.let {
-                            Log.d(TAG, "AuthActivity, DataState: ${it}")
+                            Log.d(TAG, "AuthActivity, DataState: $it")
                             viewModel.setAuthToken(it)
                         }
                     }
@@ -56,7 +56,7 @@ class AuthActivity : BaseActivity(), OnDestinationChangedListener {
         })
 
         viewModel.viewState.observe(this, Observer{
-            Log.d(TAG, "AuthActivity, subscribeObservers: AuthViewState: ${it}")
+            Log.d(TAG, "AuthActivity, subscribeObservers: AuthViewState: $it")
             it.authToken?.let{
                 sessionManager.login(it)
             }
