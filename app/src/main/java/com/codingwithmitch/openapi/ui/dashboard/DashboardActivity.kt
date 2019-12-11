@@ -18,6 +18,7 @@ import com.codingwithmitch.openapi.ui.dashboard.blog.ViewBlogFragment
 import com.codingwithmitch.openapi.util.BottomNavController
 import com.codingwithmitch.openapi.util.BottomNavController.*
 import com.codingwithmitch.openapi.util.setUpNavigation
+import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.activity_dashboard.*
 
 class DashboardActivity : BaseActivity(),
@@ -108,7 +109,7 @@ class DashboardActivity : BaseActivity(),
         }
 
     override fun onGraphChange() {
-        // TODO - What needs zo happen when the graph changes
+        expandAppbar()
     }
 
     override fun onReselectNavItem(navController: NavController, fragment: Fragment) =
@@ -134,4 +135,8 @@ class DashboardActivity : BaseActivity(),
                 // do nothing
             }
         }
+
+    override fun expandAppbar() {
+        findViewById<AppBarLayout>(R.id.app_bar).setExpanded(true)
+    }
 }

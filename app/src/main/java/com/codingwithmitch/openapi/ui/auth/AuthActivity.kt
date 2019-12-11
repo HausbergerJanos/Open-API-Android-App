@@ -17,6 +17,7 @@ import com.codingwithmitch.openapi.ui.ResponseType
 import com.codingwithmitch.openapi.ui.ResponseType.*
 import com.codingwithmitch.openapi.ui.auth.state.AuthStateEvent
 import com.codingwithmitch.openapi.ui.dashboard.DashboardActivity
+import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.activity_auth.*
 import javax.inject.Inject
 
@@ -97,5 +98,9 @@ class AuthActivity : BaseActivity(), OnDestinationChangedListener {
                 it.visibility = View.GONE
             }
         }
+    }
+
+    override fun expandAppbar() {
+        // ignore
     }
 }
