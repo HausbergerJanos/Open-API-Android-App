@@ -21,7 +21,7 @@ class DashboardModule {
 
     @DashboardScope
     @Provides
-    fun provideDashboardRepository(
+    fun provideAccountRepository(
         apiDashboardService: ApiDashboardService,
         accountPropertiesDao: AccountPropertiesDao,
         sessionManager: SessionManager

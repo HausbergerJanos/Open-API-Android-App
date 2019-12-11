@@ -52,6 +52,7 @@ constructor(
         return object: NetworkBoundResource<LoginResponse, Any, AuthViewState>(
             sessionManager.isConnectedToTheInternet(),
             true,
+            true,
             false) {
 
             // Not used in this case
@@ -137,6 +138,7 @@ constructor(
 
         return object: NetworkBoundResource<RegistrationResponse, Any, AuthViewState>(
             sessionManager.isConnectedToTheInternet(),
+            true,
             true,
             false) {
 
@@ -226,6 +228,7 @@ constructor(
         return object: NetworkBoundResource<Void, Any, AuthViewState>(
             sessionManager.isConnectedToTheInternet(),
             false,
+            false,
             false
         ) {
 
@@ -241,13 +244,10 @@ constructor(
 
             override suspend fun createCacheRequestAndReturn() {
                 accountPropertiesDao.searchByEmail(prevAuthUserEmail).let { accountProperties ->
-
                     Log.d(TAG, "checkPrevAuthUser: Searching for token: $accountProperties")
-
                     accountProperties?.let {
                         if (accountProperties.pk > -1) {
                             authTokenDao.searchByPk(accountProperties.pk).let { authToken ->
-
                                 if (authToken != null) {
                                     onCompleteJob(
                                         DataState.data(
@@ -261,6 +261,7 @@ constructor(
                             }
                         }
                     }
+
                     Log.d(TAG, "checkPrevAuthUser: Auth token not found...")
                     onCompleteJob(
                         DataState.data(

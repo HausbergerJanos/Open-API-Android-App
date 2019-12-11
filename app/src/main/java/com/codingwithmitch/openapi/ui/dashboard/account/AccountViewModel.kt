@@ -33,7 +33,16 @@ constructor(
             }
 
             is UpdateAccountPropertiesEvent -> {
-                return AbsentLiveData.create()
+                return sessionManager.cachedToken.value?.let { authToken ->
+                    accountRepository.saveAccountProperties(
+                        authToken,
+                        AccountProperties(
+                            authToken.account_pk,
+                            stateEvent.email,
+                            stateEvent.userName
+                        )
+                    )
+                }?: AbsentLiveData.create()
             }
 
             is ChangePasswordEvent -> {

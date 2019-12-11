@@ -3,6 +3,7 @@ package com.codingwithmitch.openapi.repository.dashboard
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.switchMap
+import com.codingwithmitch.openapi.api.GenericResponse
 import com.codingwithmitch.openapi.api.dashboard.ApiDashboardService
 import com.codingwithmitch.openapi.models.AccountProperties
 import com.codingwithmitch.openapi.models.AuthToken
@@ -10,6 +11,8 @@ import com.codingwithmitch.openapi.persistance.AccountPropertiesDao
 import com.codingwithmitch.openapi.repository.NetworkBoundResource
 import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.DataState
+import com.codingwithmitch.openapi.ui.Response
+import com.codingwithmitch.openapi.ui.ResponseType
 import com.codingwithmitch.openapi.ui.auth.state.AuthViewState
 import com.codingwithmitch.openapi.ui.dashboard.account.state.AccountViewState
 import com.codingwithmitch.openapi.util.AbsentLiveData
@@ -36,6 +39,7 @@ constructor(
         return object: NetworkBoundResource<AccountProperties, AccountProperties, AccountViewState>(
             sessionManager.isConnectedToTheInternet(),
             true,
+            false,
             true
         ) {
 
@@ -79,6 +83,63 @@ constructor(
 
             override fun createCall(): LiveData<GenericApiResponse<AccountProperties>> {
                 return apiDashboardService.getAccountProperties("Token ${authToken.token}")
+            }
+
+            override fun setJob(job: Job) {
+                repositoryJob?.cancel()
+                repositoryJob = job
+            }
+        }.asLiveData()
+    }
+
+    fun saveAccountProperties(
+        authToken: AuthToken,
+        accountProperties: AccountProperties
+    ): LiveData<DataState<AccountViewState>> {
+        return object: NetworkBoundResource<GenericResponse, Any, AccountViewState>(
+            isNetworkAvailable = sessionManager.isConnectedToTheInternet(),
+            isNetworkRequest = true,
+            shouldCancelIfNoInternet = true,
+            shouldLoadFromCache =  false
+        ) {
+            // Not used in this case
+            override suspend fun createCacheRequestAndReturn() {
+
+            }
+
+            override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<GenericResponse>) {
+                updateLocalDb(null)
+
+                withContext(Main) {
+                    // Finish with success response
+                    onCompleteJob(
+                        DataState.data(
+                            data = null,
+                            response = Response(response.body.response, ResponseType.Toast())
+                        )
+                    )
+                }
+            }
+
+            override fun createCall(): LiveData<GenericApiResponse<GenericResponse>> {
+                return apiDashboardService.saveAccountProperties(
+                    "Token ${authToken.token}",
+                    accountProperties.email,
+                    accountProperties.userName
+                )
+            }
+
+            // Not used in this case
+            override fun loadFromCache(): LiveData<AccountViewState> {
+                return AbsentLiveData.create()
+            }
+
+            override suspend fun updateLocalDb(cacheObject: Any?) {
+                return accountPropertiesDao.updateAccountProperties(
+                    accountProperties.pk,
+                    accountProperties.email,
+                    accountProperties.userName
+                )
             }
 
             override fun setJob(job: Job) {
