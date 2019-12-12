@@ -12,6 +12,7 @@ import com.codingwithmitch.openapi.models.AccountProperties
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.persistance.AccountPropertiesDao
 import com.codingwithmitch.openapi.persistance.AuthTokenDao
+import com.codingwithmitch.openapi.repository.JobManager
 import com.codingwithmitch.openapi.repository.NetworkBoundResource
 import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.DataState
@@ -36,11 +37,9 @@ constructor(
     val sessionManager: SessionManager,
     val sharedPreferences: SharedPreferences,
     val sharedPrefsEditor: SharedPreferences.Editor
-) {
+) : JobManager("AuthRepository") {
 
     private val TAG = javaClass.simpleName
-
-    private var repositoryJob: Job? = null
 
     fun login(loginRequest: LoginRequest): LiveData<DataState<AuthViewState>> {
 
@@ -118,8 +117,7 @@ constructor(
             }
 
             override fun setJob(job: Job) {
-                repositoryJob?.cancel()
-                repositoryJob = job
+                addJob("login", job)
             }
 
             // Not used in this case
@@ -205,8 +203,7 @@ constructor(
             }
 
             override fun setJob(job: Job) {
-                repositoryJob?.cancel()
-                repositoryJob = job
+                addJob("registration", job)
             }
 
             // Ignore in this case
@@ -286,8 +283,7 @@ constructor(
             }
 
             override fun setJob(job: Job) {
-                repositoryJob?.cancel()
-                repositoryJob = job
+                addJob("checkPrevAuthUser", job)
             }
 
         }.asLiveData()
@@ -322,10 +318,5 @@ constructor(
                 )
             }
         }
-    }
-
-    fun cancelActiveJobs() {
-        Log.d(TAG, "cancelActiveJobs: Cancelling on-going jobs...")
-        repositoryJob?.cancel()
     }
 }

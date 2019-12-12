@@ -21,7 +21,14 @@ abstract class BaseCreateBlogFragment : DaggerFragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpActionBarWithNavController(R.id.createBlogFragment, activity as AppCompatActivity)
+
+        cancelActiveJobs()
     }
+
+    fun cancelActiveJobs() {
+        //viewModel.cancelActiveJobs()
+    }
+
 
     private fun setUpActionBarWithNavController(fragmentId: Int, activity: AppCompatActivity) {
         val appBarConfiguration = AppBarConfiguration(setOf(fragmentId))

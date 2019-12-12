@@ -36,6 +36,10 @@ class AuthActivity : BaseActivity(), OnDestinationChangedListener {
         findNavController(R.id.authNavHostFragment).addOnDestinationChangedListener(this)
 
         subscribeObservers()
+    }
+
+    override fun onResume() {
+        super.onResume()
         checkPreviousAuthUser()
     }
 
