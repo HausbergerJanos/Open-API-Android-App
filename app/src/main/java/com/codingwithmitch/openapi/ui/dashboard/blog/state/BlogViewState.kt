@@ -4,15 +4,22 @@ import com.codingwithmitch.openapi.models.BlogPost
 
 data class BlogViewState(
 
-    // Blog fragment variables
-    var blogFields: BlogFields = BlogFields()
+    // BlogFragment variables
+    var blogFields: BlogFields = BlogFields(),
 
     // ViewBlogFragment variables
+    var viewBlogFields: ViewBlogFields = ViewBlogFields()
+
     // UpdateBlogFragment variables
 ) {
 
     data class BlogFields(
         var blogList: List<BlogPost> = ArrayList(),
         var searchQuery: String = ""
+    )
+
+    data class ViewBlogFields(
+        var blogPost: BlogPost? = null,
+        var isAuthorOfBlogPost: Boolean = false
     )
 }

@@ -21,9 +21,6 @@ import javax.inject.Inject
 
 class BlogFragment : BaseBlogFragment(), Interaction{
 
-    @Inject
-    lateinit var requestManager: RequestManager
-
     private lateinit var adapter: BlogRecyclerViewAdapter
 
     override fun onCreateView(
@@ -36,12 +33,6 @@ class BlogFragment : BaseBlogFragment(), Interaction{
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        /**
-        goViewBlogFragment?.setOnClickListener {
-            findNavController().navigate(R.id.action_blogFragment_to_viewBlogFragment)
-        }
-        */
 
         initRecyclerView()
         subscribeObservers()
@@ -117,6 +108,7 @@ class BlogFragment : BaseBlogFragment(), Interaction{
     }
 
     override fun onItemSelected(position: Int, item: BlogPost) {
-        Toast.makeText(context, position.toString(), Toast.LENGTH_SHORT).show()
+        viewModel.setBlogPost(item)
+        findNavController().navigate(R.id.action_blogFragment_to_viewBlogFragment)
     }
 }

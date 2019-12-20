@@ -14,8 +14,7 @@ import kotlinx.android.synthetic.main.layout_blog_list_item.view.*
 
 class BlogRecyclerViewAdapter(
     private val interaction: Interaction? = null,
-    private val requestManager: RequestManager) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private val requestManager: RequestManager) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val TAG = javaClass.simpleName + "-->"
     private val NO_MORE_RESULTS = -3

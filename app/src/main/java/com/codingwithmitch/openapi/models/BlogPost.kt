@@ -46,6 +46,4 @@ data class BlogPost(
                 "date_updated=$dateUpdated, " +
                 "username='$userName')"
     }
-
-
 }

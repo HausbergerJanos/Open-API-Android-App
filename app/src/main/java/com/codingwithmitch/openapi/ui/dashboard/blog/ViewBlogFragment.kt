@@ -2,8 +2,12 @@ package com.codingwithmitch.openapi.ui.dashboard.blog
 
 import android.os.Bundle
 import android.view.*
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.models.BlogPost
+import com.codingwithmitch.openapi.util.DateUtils
+import kotlinx.android.synthetic.main.fragment_view_blog.*
 
 class ViewBlogFragment : BaseBlogFragment(){
 
@@ -19,6 +23,35 @@ class ViewBlogFragment : BaseBlogFragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
+
+        subscribeObservers()
+    }
+
+    private fun subscribeObservers() {
+        viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
+            dataState?.let { blogDataState ->
+                stateChangeListener.onDataStateChange(blogDataState)
+            }
+        })
+
+        viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->
+            viewState?.let { blogViewState ->
+                blogViewState.viewBlogFields.blogPost?.let { blogPost ->
+                    setBlogProperties(blogPost)
+                }
+            }
+        })
+    }
+
+    private fun setBlogProperties(blogPost: BlogPost) {
+        requestManager
+            .load(blogPost.image)
+            .into(blog_image)
+
+        blog_title.text = blogPost.title
+        blog_author.text = blogPost.userName
+        blog_update_date.text = DateUtils.convertLongToStringDate(blogPost.dateUpdated)
+        blog_body.text = blogPost.body
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

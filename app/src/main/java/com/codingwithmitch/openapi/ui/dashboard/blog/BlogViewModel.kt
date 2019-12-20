@@ -39,6 +39,10 @@ constructor(
                 }?: AbsentLiveData.create()
             }
 
+            is CheckAuthorOfBlogPost -> {
+                AbsentLiveData.create()
+            }
+
             is None -> {
                 AbsentLiveData.create()
             }
@@ -57,6 +61,18 @@ constructor(
     fun setBlogListData(blogList: List<BlogPost>) {
         val update = getCurrentViewState()
         update.blogFields.blogList = blogList
+        _viewState.value = update
+    }
+
+    fun setBlogPost(blogPost: BlogPost) {
+        val update = getCurrentViewState()
+        update.viewBlogFields.blogPost = blogPost
+        _viewState.value = update
+    }
+
+    fun setIsAuthorOfBlogPost(isAuthorOfBlogPost: Boolean) {
+        val update = getCurrentViewState()
+        update.viewBlogFields.isAuthorOfBlogPost = isAuthorOfBlogPost
         _viewState.value = update
     }
 
