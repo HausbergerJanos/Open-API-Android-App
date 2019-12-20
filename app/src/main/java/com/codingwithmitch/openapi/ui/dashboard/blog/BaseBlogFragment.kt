@@ -13,6 +13,7 @@ import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.di.ViewModelProviderFactory
 import com.codingwithmitch.openapi.ui.DataStateChangeListener
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.BlogViewModel
 import dagger.android.support.DaggerFragment
 import java.lang.Exception
 import javax.inject.Inject

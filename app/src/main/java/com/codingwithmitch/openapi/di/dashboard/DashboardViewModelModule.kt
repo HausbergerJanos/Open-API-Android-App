@@ -3,7 +3,7 @@ package com.codingwithmitch.openapi.di.dashboard
 import androidx.lifecycle.ViewModel
 import com.codingwithmitch.openapi.di.ViewModelKey
 import com.codingwithmitch.openapi.ui.dashboard.account.AccountViewModel
-import com.codingwithmitch.openapi.ui.dashboard.blog.BlogViewModel
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.BlogViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap

@@ -14,6 +14,7 @@ import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.DataState
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
 import com.codingwithmitch.openapi.util.ApiSuccessResponse
+import com.codingwithmitch.openapi.util.Constants.Constants.Companion.PAGINATION_PAGE_SIZE
 import com.codingwithmitch.openapi.util.DateUtils
 import com.codingwithmitch.openapi.util.GenericApiResponse
 import kotlinx.coroutines.Dispatchers.IO
@@ -36,7 +37,8 @@ constructor(
 
     fun searchBlogPosts(
         authToken: AuthToken,
-        query: String
+        query: String,
+        page: Int
     ): LiveData<DataState<BlogViewState>> {
         return object: NetworkBoundResource<BlogListSearchResponse, List<BlogPost>, BlogViewState>(
             isNetworkAvailable = sessionManager.isConnectedToTheInternet(),
@@ -50,6 +52,13 @@ constructor(
                 withContext(Main) {
                     // Finishing by viewing db cache
                     result.addSource(loadFromCache()) { viewState ->
+                        viewState?.let { blogViewState ->
+                            blogViewState.blogFields.isQueryInProgress = false
+                            if (page * PAGINATION_PAGE_SIZE > viewState.blogFields.blogList.size) {
+                                blogViewState.blogFields.isQueryExhausted = true
+                            }
+                        }
+
                         onCompleteJob(
                             dataState = DataState.data(
                                 data = viewState,
@@ -86,19 +95,24 @@ constructor(
             override fun createCall(): LiveData<GenericApiResponse<BlogListSearchResponse>> {
                 return apiDashboardService.searchListBlogPosts(
                     "Token ${authToken.token}",
-                    query = query
+                    query = query,
+                    page = page
                 )
             }
 
             override fun loadFromCache(): LiveData<BlogViewState> {
-                return blogPostDao.getAllBlogPosts()
+                return blogPostDao.getAllBlogPosts(
+                    query = query,
+                    page = page
+                )
                     .switchMap {  list ->
                         object: LiveData<BlogViewState>() {
                             override fun onActive() {
                                 super.onActive()
                                 value = BlogViewState(
                                     blogFields = BlogViewState.BlogFields(
-                                        blogList = list
+                                        blogList = list,
+                                        isQueryInProgress = true
                                     )
                                 )
                             }

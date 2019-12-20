@@ -17,9 +17,9 @@ class BlogRecyclerViewAdapter(
     private val requestManager: RequestManager) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val TAG = javaClass.simpleName + "-->"
-    private val NO_MORE_RESULTS = -3
+    private val NO_MORE_RESULTS = -1
     private val BLOG_ITEM = 0
-    private val NO_MORE_RESULTS_BLOG_MARHER = BlogPost(
+    private val NO_MORE_RESULTS_BLOG_MARKER = BlogPost(
         NO_MORE_RESULTS,
         "",
         "",
@@ -109,7 +109,7 @@ class BlogRecyclerViewAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is BlogViewHolder -> {
-                holder.bind(differ.currentList.get(position))
+                holder.bind(differ.currentList[position])
             }
         }
     }
@@ -129,9 +129,9 @@ class BlogRecyclerViewAdapter(
     fun submitList(list: List<BlogPost>?, isQueryExhausted: Boolean) {
         val newList = list?.toMutableList()
         if (isQueryExhausted) {
-            newList?.add(NO_MORE_RESULTS_BLOG_MARHER)
+            newList?.add(NO_MORE_RESULTS_BLOG_MARKER)
         }
-        differ.submitList(list)
+        differ.submitList(newList)
     }
 
     class BlogViewHolder
