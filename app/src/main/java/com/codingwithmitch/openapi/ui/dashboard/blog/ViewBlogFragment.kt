@@ -6,6 +6,10 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.models.BlogPost
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent.*
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.isAuthorOfBlogPost
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.setIsAuthorOfBlogPost
 import com.codingwithmitch.openapi.util.DateUtils
 import kotlinx.android.synthetic.main.fragment_view_blog.*
 
@@ -23,14 +27,28 @@ class ViewBlogFragment : BaseBlogFragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
-
         subscribeObservers()
+        checkIsAuthorOfBlogPost()
+        stateChangeListener.expandAppbar()
+    }
+
+    private fun checkIsAuthorOfBlogPost() {
+        viewModel.setIsAuthorOfBlogPost(false) // reset
+        viewModel.setStateEvent(CheckAuthorOfBlogPost())
     }
 
     private fun subscribeObservers() {
         viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
             dataState?.let { blogDataState ->
                 stateChangeListener.onDataStateChange(blogDataState)
+
+                blogDataState.data?.let { data ->
+                    data.data?.getContentIfNotHandled()?.let { blogViewState ->
+                        viewModel.setIsAuthorOfBlogPost(
+                            blogViewState.viewBlogFields.isAuthorOfBlogPost
+                        )
+                    }
+                }
             }
         })
 
@@ -39,8 +57,17 @@ class ViewBlogFragment : BaseBlogFragment(){
                 blogViewState.viewBlogFields.blogPost?.let { blogPost ->
                     setBlogProperties(blogPost)
                 }
+
+                if (blogViewState.viewBlogFields.isAuthorOfBlogPost) {
+                    adaptViewToAuthorMode()
+                }
             }
         })
+    }
+
+    private fun adaptViewToAuthorMode() {
+        activity?.invalidateOptionsMenu()
+        delete_button.visibility = View.VISIBLE
     }
 
     private fun setBlogProperties(blogPost: BlogPost) {
@@ -56,18 +83,13 @@ class ViewBlogFragment : BaseBlogFragment(){
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-
-        // TODO("Check if user is author of blog post")
-        val isAuthorOfBlogPost = true
-        if (isAuthorOfBlogPost) {
+        if (viewModel.isAuthorOfBlogPost()) {
             inflater.inflate(R.menu.edit_view_menu, menu)
         }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // TODO("Check if user is author of blog post")
-        val isAuthorOfBlogPost = true
-        if (isAuthorOfBlogPost) {
+        if (viewModel.isAuthorOfBlogPost()) {
             when (item.itemId) {
                 R.id.edit -> {
                     navToUpdateBlogFragment()
