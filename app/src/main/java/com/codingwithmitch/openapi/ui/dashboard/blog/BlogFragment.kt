@@ -1,15 +1,20 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog
 
+import android.app.SearchManager
+import android.content.Context.SEARCH_SERVICE
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.models.BlogPost
@@ -23,9 +28,10 @@ import com.codingwithmitch.openapi.util.TopItemSpacingDecoration
 import kotlinx.android.synthetic.main.fragment_blog.*
 import javax.inject.Inject
 
-class BlogFragment : BaseBlogFragment(), Interaction{
+class BlogFragment : BaseBlogFragment(), Interaction, SwipeRefreshLayout.OnRefreshListener {
 
     private lateinit var recyclerAdapter: BlogRecyclerViewAdapter
+    private lateinit var searchView: SearchView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,6 +43,9 @@ class BlogFragment : BaseBlogFragment(), Interaction{
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
+        setHasOptionsMenu(true)
+        swipe_refresh.setOnRefreshListener(this)
 
         initRecyclerView()
         subscribeObservers()
@@ -44,6 +53,18 @@ class BlogFragment : BaseBlogFragment(), Interaction{
         if (savedInstanceState == null) {
             viewModel.loadFirstPage()
         }
+    }
+
+    private fun onBlogSearchOrFilter() {
+        viewModel.loadFirstPage().let {
+            resetUI()
+        }
+    }
+
+    private fun resetUI() {
+        blog_post_recyclerview?.smoothScrollToPosition(0)
+        stateChangeListener.hideSoftKeyboard()
+        focusable_view.requestFocus()
     }
 
     private fun subscribeObservers() {
@@ -78,7 +99,7 @@ class BlogFragment : BaseBlogFragment(), Interaction{
         // must do this b/c server will return an ApiErrorResponse if page is not valid,
         // -> meaning there is no more data.
         dataState.error?.let { event ->
-            event.peekContent().response.message?.let { message  ->
+            event.peekContent().response.message?.let { message ->
                 if (ErrorHandling.isPaginationDone(message)) {
                     // Handle the error message event so it doesn't display in UI
                     event.getContentIfNotHandled()
@@ -87,6 +108,43 @@ class BlogFragment : BaseBlogFragment(), Interaction{
                     // "No more results..." list item
                     viewModel.setQueryExhausted(true)
                 }
+            }
+        }
+    }
+
+    private fun initSearchView(menu: Menu) {
+        activity?.apply {
+            val searchManager: SearchManager = getSystemService(SEARCH_SERVICE) as SearchManager
+            searchView = menu.findItem(R.id.action_search).actionView as SearchView
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+            searchView.maxWidth = Integer.MAX_VALUE
+            searchView.setIconifiedByDefault(true)
+            searchView.isSubmitButtonEnabled = true
+        }
+
+        // Case 1 : ENTER ON COMPUTER KEYBOARD OR ARROW ON VIRTUAL KEYBOARD
+        val searchPlate = searchView.findViewById(R.id.search_src_text) as EditText
+        searchPlate.setOnEditorActionListener { v, actionId, event ->
+
+            if (actionId == EditorInfo.IME_ACTION_UNSPECIFIED
+                || actionId == EditorInfo.IME_ACTION_SEARCH
+            ) {
+                val searchQuery = v.text.toString()
+                Log.e(TAG, "SearchView: (keyboard or arrow) executing search...: $searchQuery")
+                viewModel.setQuery(searchQuery).let {
+                    onBlogSearchOrFilter()
+                }
+            }
+            true
+        }
+
+        // Case 2 : SEARCH BUTTON CLICKED (in toolbar)
+        val searchButton = searchView.findViewById(R.id.search_go_btn) as View
+        searchButton.setOnClickListener {
+            val searchQuery = searchPlate.text.toString()
+            Log.e(TAG, "SearchView: (button) executing search...: ${searchQuery}")
+            viewModel.setQuery(searchQuery).let {
+                onBlogSearchOrFilter()
             }
         }
     }
@@ -104,7 +162,7 @@ class BlogFragment : BaseBlogFragment(), Interaction{
                 interaction = this@BlogFragment
             )
 
-            addOnScrollListener(object: RecyclerView.OnScrollListener() {
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
 
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
@@ -127,8 +185,19 @@ class BlogFragment : BaseBlogFragment(), Interaction{
         blog_post_recyclerview?.adapter = null
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.search_menu, menu)
+        initSearchView(menu)
+    }
+
     override fun onItemSelected(position: Int, item: BlogPost) {
         viewModel.setBlogPost(item)
         findNavController().navigate(R.id.action_blogFragment_to_viewBlogFragment)
+    }
+
+    override fun onRefresh() {
+        onBlogSearchOrFilter()
+        swipe_refresh.isRefreshing = false
     }
 }
