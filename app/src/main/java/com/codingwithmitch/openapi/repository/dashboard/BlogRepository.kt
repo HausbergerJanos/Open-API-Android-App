@@ -14,11 +14,15 @@ import com.codingwithmitch.openapi.repository.JobManager
 import com.codingwithmitch.openapi.repository.NetworkBoundResource
 import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.DataState
+import com.codingwithmitch.openapi.ui.Response
+import com.codingwithmitch.openapi.ui.ResponseType
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
 import com.codingwithmitch.openapi.util.*
 import com.codingwithmitch.openapi.util.Constants.Constants.Companion.PAGINATION_PAGE_SIZE
+import com.codingwithmitch.openapi.util.ErrorHandling.Companion.ERROR_UNKNOWN
 import com.codingwithmitch.openapi.util.SuccessHandling.Companion.RESPONSE_HAS_PERMISSION_TO_EDIT
 import com.codingwithmitch.openapi.util.SuccessHandling.Companion.RESPONSE_NO_PERMISSION_TO_EDIT
+import com.codingwithmitch.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_DELETED
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -206,6 +210,73 @@ constructor(
 
             override fun setJob(job: Job) {
                 addJob("isAuthorOfBlogPost", job)
+            }
+
+        }.asLiveData()
+    }
+
+    fun deleteBlogPost(
+        authToken: AuthToken,
+        blogPost: BlogPost
+    ): LiveData<DataState<BlogViewState>> {
+        return object: NetworkBoundResource<GenericResponse, BlogPost, BlogViewState>(
+            isNetworkAvailable = sessionManager.isConnectedToTheInternet(),
+            isNetworkRequest = true,
+            shouldCancelIfNoInternet = true,
+            shouldLoadFromCache = false
+        ) {
+
+            // Not used in this case
+            override suspend fun createCacheRequestAndReturn() {
+
+            }
+
+            override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<GenericResponse>) {
+                if (response.body.response == SUCCESS_BLOG_DELETED) {
+                    updateLocalDb(blogPost)
+                } else {
+                    onCompleteJob(
+                        dataState = DataState.error(
+                            Response(
+                                message = ERROR_UNKNOWN,
+                                responseType = ResponseType.Dialog()
+                            )
+                        )
+                    )
+                }
+            }
+
+            override fun createCall(): LiveData<GenericApiResponse<GenericResponse>> {
+                return apiDashboardService.deleteBlogPost(
+                    "Token ${authToken.token}",
+                    blogPost.slug
+                )
+            }
+
+            // Not used in this case
+            override fun loadFromCache(): LiveData<BlogViewState> {
+                return AbsentLiveData.create()
+            }
+
+            // Not used in this case
+            override suspend fun updateLocalDb(cacheObject: BlogPost?) {
+                cacheObject?.let { blogPost ->
+                    blogPostDao.deleteBlogPost(blogPost)
+
+                    onCompleteJob(
+                        dataState = DataState.data(
+                            data = null,
+                            response = Response(
+                                SUCCESS_BLOG_DELETED,
+                                ResponseType.Toast()
+                            )
+                        )
+                    )
+                }
+            }
+
+            override fun setJob(job: Job) {
+                addJob("deleteBlogPost", job)
             }
 
         }.asLiveData()

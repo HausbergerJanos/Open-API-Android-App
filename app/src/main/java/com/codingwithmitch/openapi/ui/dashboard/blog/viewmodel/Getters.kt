@@ -1,5 +1,7 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel
 
+import com.codingwithmitch.openapi.models.BlogPost
+
 fun BlogViewModel.getPage(): Int {
     getCurrentViewState().let {
         return it.blogFields.page
@@ -46,5 +48,23 @@ fun BlogViewModel.isAuthorOfBlogPost(): Boolean {
     getCurrentViewState().let {
         return it.viewBlogFields.isAuthorOfBlogPost
     }
+}
+
+fun BlogViewModel.getBlogPost(): BlogPost {
+    getCurrentViewState().let {
+        return it.viewBlogFields.blogPost ?: getFallbackBlogPost()
+    }
+}
+
+fun BlogViewModel.getFallbackBlogPost(): BlogPost {
+    return BlogPost(
+        id = -1,
+        slug = "",
+        title = "",
+        body = "",
+        image = "",
+        dateUpdated = 0,
+        userName = ""
+    )
 }
 
