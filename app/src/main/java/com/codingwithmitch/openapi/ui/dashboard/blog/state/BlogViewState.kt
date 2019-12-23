@@ -1,6 +1,8 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.state
 
 import com.codingwithmitch.openapi.models.BlogPost
+import com.codingwithmitch.openapi.persistance.BlogQueryUtils.Companion.BLOG_ORDER_ASC
+import com.codingwithmitch.openapi.persistance.BlogQueryUtils.Companion.ORDER_BY_ASC_DATE_UPDATED
 
 data class BlogViewState(
 
@@ -18,7 +20,9 @@ data class BlogViewState(
         var searchQuery: String = "",
         var page: Int = 1,
         var isQueryInProgress: Boolean = false,
-        var isQueryExhausted: Boolean = false
+        var isQueryExhausted: Boolean = false,
+        var filter: String = ORDER_BY_ASC_DATE_UPDATED,
+        var order: String = BLOG_ORDER_ASC
     )
 
     data class ViewBlogFields(

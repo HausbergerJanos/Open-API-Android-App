@@ -8,6 +8,7 @@ import com.codingwithmitch.openapi.api.dashboard.responses.BlogListSearchRespons
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.models.BlogPost
 import com.codingwithmitch.openapi.persistance.BlogPostDao
+import com.codingwithmitch.openapi.persistance.returnOrderedBlogQuery
 import com.codingwithmitch.openapi.repository.JobManager
 import com.codingwithmitch.openapi.repository.NetworkBoundResource
 import com.codingwithmitch.openapi.session.SessionManager
@@ -38,6 +39,7 @@ constructor(
     fun searchBlogPosts(
         authToken: AuthToken,
         query: String,
+        filterAndOrder: String,
         page: Int
     ): LiveData<DataState<BlogViewState>> {
         return object: NetworkBoundResource<BlogListSearchResponse, List<BlogPost>, BlogViewState>(
@@ -96,13 +98,15 @@ constructor(
                 return apiDashboardService.searchListBlogPosts(
                     "Token ${authToken.token}",
                     query = query,
+                    ordering = filterAndOrder,
                     page = page
                 )
             }
 
             override fun loadFromCache(): LiveData<BlogViewState> {
-                return blogPostDao.getAllBlogPosts(
+                return blogPostDao.returnOrderedBlogQuery(
                     query = query,
+                    filterAndOrder = filterAndOrder,
                     page = page
                 )
                     .switchMap {  list ->
