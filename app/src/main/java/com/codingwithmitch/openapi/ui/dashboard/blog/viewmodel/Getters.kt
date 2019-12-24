@@ -1,5 +1,6 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel
 
+import android.net.Uri
 import com.codingwithmitch.openapi.models.BlogPost
 
 fun BlogViewModel.getPage(): Int {
@@ -66,5 +67,11 @@ fun BlogViewModel.getFallbackBlogPost(): BlogPost {
         dateUpdated = 0,
         userName = ""
     )
+}
+
+fun BlogViewModel.getUpdatedBlogUri(): Uri? {
+    getCurrentViewState().let {
+        return it.updateBlogFields.updatedImageUri
+    }
 }
 
