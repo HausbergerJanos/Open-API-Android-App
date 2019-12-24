@@ -13,7 +13,7 @@ fun BlogViewModel.loadFirstPage() {
     setQueryInProgress(true)
     setQueryExhausted(false)
     resetPage()
-    setStateEvent(BlogSearchEvent())
+    setStateEvent(BlogSearchEvent)
 }
 
 fun BlogViewModel.incrementPageNumber() {
@@ -27,7 +27,7 @@ fun BlogViewModel.nextPage() {
     if (!isQueryExhausted() && !isQueryInProgress()) {
         incrementPageNumber()
         setQueryInProgress(true)
-        setStateEvent(BlogSearchEvent())
+        setStateEvent(BlogSearchEvent)
     }
 }
 

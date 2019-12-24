@@ -1,12 +1,20 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.state
 
+import okhttp3.MultipartBody
+
 sealed class BlogStateEvent {
 
-    class BlogSearchEvent : BlogStateEvent()
+    object BlogSearchEvent : BlogStateEvent()
 
-    class CheckAuthorOfBlogPost() : BlogStateEvent()
+    object CheckAuthorOfBlogPost : BlogStateEvent()
 
-    class DeleteBlogPostEvent() : BlogStateEvent()
+    object DeleteBlogPostEvent : BlogStateEvent()
 
-    class None : BlogStateEvent()
+    data class UpdatedBlogPostEvent(
+        var title: String,
+        var body: String,
+        val image: MultipartBody.Part?
+    ): BlogStateEvent()
+
+    object None : BlogStateEvent()
 }

@@ -2,15 +2,24 @@ package com.codingwithmitch.openapi.ui.dashboard.blog
 
 import android.os.Bundle
 import android.view.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.models.BlogPost
+import com.codingwithmitch.openapi.ui.AreYouSureCallback
+import com.codingwithmitch.openapi.ui.UIMessageType
+import com.codingwithmitch.openapi.ui.UIMessageType.*
+import com.codingwithmitch.openapi.ui.UiMessage
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent.*
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.getBlogPost
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.isAuthorOfBlogPost
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.setIsAuthorOfBlogPost
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.setUpdatedBlogFields
 import com.codingwithmitch.openapi.util.DateUtils
+import com.codingwithmitch.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_DELETED
 import kotlinx.android.synthetic.main.fragment_view_blog.*
 
 class ViewBlogFragment : BaseBlogFragment(){
@@ -26,23 +35,44 @@ class ViewBlogFragment : BaseBlogFragment(){
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(true)
         setHasOptionsMenu(true)
         subscribeObservers()
         checkIsAuthorOfBlogPost()
         stateChangeListener.expandAppbar()
 
         delete_button.setOnClickListener {
-            deleteBlogPost()
+            confirmDeleteBlogRequest()
         }
     }
 
+    private fun confirmDeleteBlogRequest() {
+        val callback: AreYouSureCallback = object: AreYouSureCallback {
+            override fun proceed() {
+                deleteBlogPost()
+            }
+
+            override fun cancel() {
+                // ignore
+            }
+
+        }
+
+        uiCommunicationListener.onUIMessageReceived(
+            uiMessage = UiMessage(
+                message = getString(R.string.are_you_sure_delete),
+                messageType = AreYouSureDialog(callback)
+            )
+        )
+    }
+
     private fun deleteBlogPost() {
-        viewModel.setStateEvent(DeleteBlogPostEvent())
+        viewModel.setStateEvent(DeleteBlogPostEvent)
     }
 
     private fun checkIsAuthorOfBlogPost() {
         viewModel.setIsAuthorOfBlogPost(false) // reset
-        viewModel.setStateEvent(CheckAuthorOfBlogPost())
+        viewModel.setStateEvent(CheckAuthorOfBlogPost)
     }
 
     private fun subscribeObservers() {
@@ -55,6 +85,13 @@ class ViewBlogFragment : BaseBlogFragment(){
                         viewModel.setIsAuthorOfBlogPost(
                             blogViewState.viewBlogFields.isAuthorOfBlogPost
                         )
+                    }
+
+                    data.response?.peekContent()?.let { response ->
+                        if (response.message == SUCCESS_BLOG_DELETED) {
+                            viewModel.removeDeletedBlogPost()
+                            findNavController().popBackStack()
+                        }
                     }
                 }
             }
@@ -110,6 +147,17 @@ class ViewBlogFragment : BaseBlogFragment(){
     }
 
     private fun navToUpdateBlogFragment() {
-        findNavController().navigate(R.id.action_viewBlogFragment_to_updateBlogFragment)
+        try {
+            // Prep for next fragment
+            viewModel.setUpdatedBlogFields(
+                title = viewModel.getBlogPost().title,
+                body = viewModel.getBlogPost().body,
+                uri = viewModel.getBlogPost().image.toUri()
+            )
+
+            findNavController().navigate(R.id.action_viewBlogFragment_to_updateBlogFragment)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

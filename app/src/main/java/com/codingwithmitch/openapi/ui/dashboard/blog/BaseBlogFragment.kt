@@ -13,6 +13,7 @@ import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.di.ViewModelProviderFactory
 import com.codingwithmitch.openapi.ui.DataStateChangeListener
+import com.codingwithmitch.openapi.ui.UICommunicationListener
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.BlogViewModel
 import dagger.android.support.DaggerFragment
 import java.lang.Exception
@@ -31,6 +32,7 @@ abstract class BaseBlogFragment : DaggerFragment(){
     lateinit var viewModel: BlogViewModel
 
     lateinit var stateChangeListener: DataStateChangeListener
+    lateinit var uiCommunicationListener: UICommunicationListener
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -63,6 +65,12 @@ abstract class BaseBlogFragment : DaggerFragment(){
             stateChangeListener = context as DataStateChangeListener
         } catch (e: ClassCastException){
             Log.e(TAG, "$context must implement DataStateChangeListener" )
+        }
+
+        try{
+            uiCommunicationListener = context as UICommunicationListener
+        } catch (e: ClassCastException){
+            Log.e(TAG, "$context must implement UICommunicationListener" )
         }
     }
 }

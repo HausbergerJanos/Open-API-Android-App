@@ -1,5 +1,6 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel
 
+import android.net.Uri
 import com.codingwithmitch.openapi.models.BlogPost
 
 fun BlogViewModel.setQuery(query: String) {
@@ -52,5 +53,29 @@ fun BlogViewModel.setBlogFilter(filter: String?){
 fun BlogViewModel.setBlogOrder(order: String){
     val update = getCurrentViewState()
     update.blogFields.order = order
+    setViewState(update)
+}
+
+fun BlogViewModel.setUpdatedBlogFields(
+    title: String?,
+    body: String?,
+    uri: Uri?
+) {
+    val update = getCurrentViewState()
+    val updatedBlogFields = update.updateBlogFields.copy()
+
+    title?.let {
+        updatedBlogFields.updatedBlogTitle = it
+    }
+
+    body?.let {
+        updatedBlogFields.updatedBlogBody = it
+    }
+
+    uri?.let {
+        updatedBlogFields.updatedImageUri = it
+    }
+
+    update.updateBlogFields = updatedBlogFields
     setViewState(update)
 }

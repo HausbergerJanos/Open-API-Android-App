@@ -18,6 +18,8 @@ import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
 import com.codingwithmitch.openapi.util.AbsentLiveData
 import com.codingwithmitch.openapi.util.PreferenceKeys.Companion.BLOG_FILTER
 import com.codingwithmitch.openapi.util.PreferenceKeys.Companion.BLOG_ORDER
+import okhttp3.MediaType
+import okhttp3.RequestBody
 import javax.inject.Inject
 
 class BlogViewModel
@@ -81,6 +83,29 @@ constructor(
                 }?: AbsentLiveData.create()
             }
 
+            is UpdatedBlogPostEvent -> {
+                return sessionManager.cachedToken.value?.let { authToken ->
+
+                    val title = RequestBody.create(
+                        MediaType.parse("text/plain"),
+                        stateEvent.title
+                    )
+
+                    val body = RequestBody.create(
+                        MediaType.parse("text/plain"),
+                        stateEvent.body
+                    )
+
+                    blogRepository.updateBlogPost(
+                        authToken = authToken,
+                        slug = getSlug(),
+                        title = title,
+                        body = body,
+                        image = stateEvent.image
+                    )
+                }?: AbsentLiveData.create()
+            }
+
             is None -> {
                 object: LiveData<DataState<BlogViewState>>() {
                     override fun onActive() {
@@ -110,11 +135,23 @@ constructor(
     }
 
     private fun handlePendingData() {
-        setStateEvent(None())
+        setStateEvent(None)
     }
 
     override fun onCleared() {
         super.onCleared()
         cancelActiveJobs()
+    }
+
+    fun removeDeletedBlogPost() {
+        val update = getCurrentViewState()
+        val list = update.blogFields.blogList.toMutableList()
+        for (i in 0 until list.size) {
+            if (list[i] == getBlogPost()) {
+                list.remove(getBlogPost())
+                break
+            }
+        }
+        setBlogListData(list)
     }
 }

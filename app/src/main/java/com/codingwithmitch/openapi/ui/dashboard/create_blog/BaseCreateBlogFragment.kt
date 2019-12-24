@@ -21,6 +21,7 @@ abstract class BaseCreateBlogFragment : DaggerFragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpActionBarWithNavController(R.id.createBlogFragment, activity as AppCompatActivity)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(true)
 
         cancelActiveJobs()
     }

@@ -4,13 +4,14 @@ import android.content.Context
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import com.codingwithmitch.openapi.session.SessionManager
+import com.codingwithmitch.openapi.ui.UIMessageType.*
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-abstract class BaseActivity: DaggerAppCompatActivity(), DataStateChangeListener {
+abstract class BaseActivity: DaggerAppCompatActivity(), DataStateChangeListener, UICommunicationListener {
 
     val TAG: String = javaClass.simpleName
 
@@ -29,10 +30,34 @@ abstract class BaseActivity: DaggerAppCompatActivity(), DataStateChangeListener 
 
                 it.data?.let {
 
-                    it.response?.let { responseevent ->
-                        handleStateResponse(responseevent)
+                    it.response?.let { responseEvent ->
+                        handleStateResponse(responseEvent)
                     }
                 }
+            }
+        }
+    }
+
+    override fun onUIMessageReceived(uiMessage: UiMessage) {
+        when (uiMessage.messageType) {
+
+            is Toast -> {
+                displayToast(uiMessage.message)
+            }
+
+            is Dialog -> {
+                displayInfoDialog(uiMessage.message)
+            }
+
+            is AreYouSureDialog -> {
+                areYouSureDialog(
+                    message = uiMessage.message,
+                    callback = uiMessage.messageType.callback
+                )
+            }
+
+            is None -> {
+                Log.i(TAG, "onUIMessageReceived: ${uiMessage.message}")
             }
         }
     }

@@ -30,6 +30,7 @@ abstract class BaseAccountFragment : DaggerFragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpActionBarWithNavController(R.id.accountFragment, activity as AppCompatActivity)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(true)
 
         viewModel = activity?.run {
             ViewModelProvider(this, providerFactory).get(AccountViewModel::class.java)

@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.switchMap
 import com.codingwithmitch.openapi.api.GenericResponse
 import com.codingwithmitch.openapi.api.dashboard.ApiDashboardService
+import com.codingwithmitch.openapi.api.dashboard.responses.BlogCreateUpdateResponse
 import com.codingwithmitch.openapi.api.dashboard.responses.BlogListSearchResponse
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.models.BlogPost
@@ -16,7 +17,9 @@ import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.DataState
 import com.codingwithmitch.openapi.ui.Response
 import com.codingwithmitch.openapi.ui.ResponseType
+import com.codingwithmitch.openapi.ui.ResponseType.*
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState.*
 import com.codingwithmitch.openapi.util.*
 import com.codingwithmitch.openapi.util.Constants.Constants.Companion.PAGINATION_PAGE_SIZE
 import com.codingwithmitch.openapi.util.ErrorHandling.Companion.ERROR_UNKNOWN
@@ -28,6 +31,8 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -119,7 +124,7 @@ constructor(
                             override fun onActive() {
                                 super.onActive()
                                 value = BlogViewState(
-                                    blogFields = BlogViewState.BlogFields(
+                                    blogFields = BlogFields(
                                         blogList = list,
                                         isQueryInProgress = true
                                     )
@@ -181,7 +186,7 @@ constructor(
                     onCompleteJob(
                         DataState.data(
                             data = BlogViewState(
-                                viewBlogFields = BlogViewState.ViewBlogFields(
+                                viewBlogFields = ViewBlogFields(
                                     isAuthorOfBlogPost = isAuthor
                                 )
                             ),
@@ -239,7 +244,7 @@ constructor(
                         dataState = DataState.error(
                             Response(
                                 message = ERROR_UNKNOWN,
-                                responseType = ResponseType.Dialog()
+                                responseType = Dialog()
                             )
                         )
                     )
@@ -268,7 +273,7 @@ constructor(
                             data = null,
                             response = Response(
                                 SUCCESS_BLOG_DELETED,
-                                ResponseType.Toast()
+                                Toast()
                             )
                         )
                     )
@@ -277,6 +282,89 @@ constructor(
 
             override fun setJob(job: Job) {
                 addJob("deleteBlogPost", job)
+            }
+
+        }.asLiveData()
+    }
+
+    fun updateBlogPost(
+        authToken: AuthToken,
+        slug: String,
+        title: RequestBody,
+        body: RequestBody,
+        image: MultipartBody.Part?
+    ): LiveData<DataState<BlogViewState>> {
+        return object: NetworkBoundResource<BlogCreateUpdateResponse, BlogPost, BlogViewState>(
+            isNetworkAvailable = sessionManager.isConnectedToTheInternet(),
+            isNetworkRequest = true,
+            shouldCancelIfNoInternet = true,
+            shouldLoadFromCache = false
+        ) {
+
+            // Not used in this case
+            override suspend fun createCacheRequestAndReturn() {
+
+            }
+
+            override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<BlogCreateUpdateResponse>) {
+
+                val updatedBlogPost = BlogPost(
+                    id = response.body.id,
+                    title = response.body.title,
+                    slug = response.body.slug,
+                    body = response.body.body,
+                    image = response.body.image,
+                    dateUpdated = DateUtils.convertServerStringDateToLong(response.body.dateUpdated),
+                    userName = response.body.userName
+                )
+
+                updateLocalDb(updatedBlogPost)
+
+                withContext(Main) {
+                    onCompleteJob(
+                        dataState = DataState.data(
+                            data = BlogViewState(
+                                viewBlogFields = ViewBlogFields(
+                                    blogPost = updatedBlogPost
+                                )
+                            ),
+                            response = Response(
+                                message = response.body.response,
+                                responseType = Toast()
+                            )
+                        )
+                    )
+                }
+            }
+
+            override fun createCall(): LiveData<GenericApiResponse<BlogCreateUpdateResponse>> {
+                return apiDashboardService.updateBlog(
+                    authorization = "Token ${authToken.token}",
+                    slug = slug,
+                    title = title,
+                    body = body,
+                    image = image
+                )
+            }
+
+            // Not used in this case
+            override fun loadFromCache(): LiveData<BlogViewState> {
+                return AbsentLiveData.create()
+            }
+
+            override suspend fun updateLocalDb(cacheObject: BlogPost?) {
+                cacheObject?.let { blogPost ->
+                    blogPostDao.updateBlogPost(
+                        blogPost.id,
+                        blogPost.title,
+                        blogPost.body,
+                        blogPost.image
+                    )
+                }
+            }
+
+            override fun setJob(job: Job) {
+                addJob("updateBlogPost", job)
             }
 
         }.asLiveData()
