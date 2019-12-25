@@ -82,10 +82,17 @@ class BlogFragment : BaseBlogFragment(), Interaction, SwipeRefreshLayout.OnRefre
 
         viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->
             viewState?.let { blogViewState ->
-                recyclerAdapter.submitList(
-                    list = blogViewState.blogFields.blogList,
-                    isQueryExhausted = blogViewState.blogFields.isQueryExhausted
-                )
+                recyclerAdapter.apply {
+                    preloadGlideImages(
+                        requestManager = requestManager,
+                        list = viewState.blogFields.blogList
+                    )
+
+                    submitList(
+                        list = blogViewState.blogFields.blogList,
+                        isQueryExhausted = blogViewState.blogFields.isQueryExhausted
+                    )
+                }
             }
         })
     }
