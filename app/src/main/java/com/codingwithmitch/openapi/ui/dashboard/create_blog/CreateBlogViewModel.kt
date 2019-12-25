@@ -12,13 +12,15 @@ import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogStat
 import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogStateEvent.*
 import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogViewState
 import com.codingwithmitch.openapi.util.AbsentLiveData
+import okhttp3.MediaType
+import okhttp3.RequestBody
 import javax.inject.Inject
 
 class CreateBlogViewModel
 @Inject
 constructor(
-    val sessionManager: SessionManager,
-    val createBlogRepository: CreateBlogRepository
+    private val sessionManager: SessionManager,
+    private val createBlogRepository: CreateBlogRepository
 ) : BaseViewModel<CreateBlogStateEvent, CreateBlogViewState>() {
 
     override fun initNewViewState(): CreateBlogViewState {
@@ -29,7 +31,24 @@ constructor(
         return when(stateEvent) {
 
             is CreateNewBlogEvent -> {
-                AbsentLiveData.create()
+                sessionManager.cachedToken.value?.let { authToken ->
+                    val title = RequestBody.create(
+                        MediaType.parse("text/plain"),
+                        stateEvent.title
+                    )
+
+                    val body = RequestBody.create(
+                        MediaType.parse("text/plain"),
+                        stateEvent.body
+                    )
+
+                    createBlogRepository.createNewBlogPost(
+                        authToken = authToken,
+                        title = title,
+                        body = body,
+                        image = stateEvent.image
+                    )
+                }?: AbsentLiveData.create()
             }
 
             is None -> {
@@ -70,6 +89,12 @@ constructor(
         update.newBlogBody = null
         update.newImageUri = null
         setViewState(update)
+    }
+
+    fun getNewImageUri(): Uri? {
+        getCurrentViewState().let {
+            return it.newImageUri
+        }
     }
 
     fun cancelActiveJobs() {

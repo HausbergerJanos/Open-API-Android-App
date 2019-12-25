@@ -6,19 +6,26 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.ui.*
+import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogStateEvent
+import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogStateEvent.*
 import com.codingwithmitch.openapi.util.Constants
 import com.codingwithmitch.openapi.util.Constants.Constants.Companion.GALLERRY_REQUEST_CODE
+import com.codingwithmitch.openapi.util.ErrorHandling.Companion.ERROR_MUST_SELECT_IMAGE
 import com.codingwithmitch.openapi.util.ErrorHandling.Companion.ERROR_SOMETHING_WRONG_WITH_IMAGE
+import com.codingwithmitch.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_CREATED
 import com.theartofdev.edmodo.cropper.CropImage
 import com.theartofdev.edmodo.cropper.CropImageView
 import kotlinx.android.synthetic.main.fragment_create_blog.*
+import okhttp3.Headers
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import java.io.File
 
 class CreateBlogFragment : BaseCreateBlogFragment(){
 
@@ -32,6 +39,7 @@ class CreateBlogFragment : BaseCreateBlogFragment(){
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setHasOptionsMenu(true)
 
         blog_image.setOnClickListener {
             if (stateChangeListener.isStoragePermissionGranted()) {
@@ -54,7 +62,15 @@ class CreateBlogFragment : BaseCreateBlogFragment(){
             stateChangeListener.onDataStateChange(dataState)
 
             dataState?.let { createBlogDataState ->
-
+                createBlogDataState.data?.response?.let { event ->
+                    event.peekContent().let { response ->
+                        response.message?.let { message ->
+                            if (message == SUCCESS_BLOG_CREATED) {
+                                viewModel.clearNewBlogFields()
+                            }
+                        }
+                    }
+                }
             }
         })
 
@@ -161,5 +177,64 @@ class CreateBlogFragment : BaseCreateBlogFragment(){
             body = blog_body.text.toString(),
             imageUri = null
         )
+    }
+
+    private fun publishNewBlogPost() {
+        var multipartBody: MultipartBody.Part? = null
+
+        viewModel.getNewImageUri()?.let { imageUri ->
+            imageUri.path?.let { filePath ->
+                val imageFile = File(filePath)
+                val requestBody = RequestBody.create(
+                    MediaType.parse("image/*"), imageFile
+                )
+                multipartBody = MultipartBody.Part.createFormData(
+                    "image",
+                    imageFile.name,
+                    requestBody
+                )
+            }
+        }
+
+        multipartBody?.let {
+            viewModel.setStateEvent(
+                CreateNewBlogEvent(
+                    title = blog_title.text.toString(),
+                    body = blog_body.text.toString(),
+                    image = it
+                )
+            )
+
+            stateChangeListener.hideSoftKeyboard()
+        } ?: showErrorDialog(ERROR_MUST_SELECT_IMAGE)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.publish_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.publish -> {
+                val callback: AreYouSureCallback = object: AreYouSureCallback {
+                    override fun proceed() {
+                        publishNewBlogPost()
+                    }
+
+                    override fun cancel() {
+
+                    }
+                }
+
+                uiCommunicationListener.onUIMessageReceived(
+                    UiMessage(
+                        message = getString(R.string.are_you_sure_publish),
+                        messageType = UIMessageType.AreYouSureDialog(callback)
+                    )
+                )
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
