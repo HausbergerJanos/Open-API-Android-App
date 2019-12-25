@@ -62,7 +62,7 @@ constructor(
         }
     }
 
-    private fun setToken(newAuthToken: AuthToken?) {
+    fun setToken(newAuthToken: AuthToken?) {
         GlobalScope.launch(Main) {
             if (_cachedAuthToken.value != newAuthToken) {
                 _cachedAuthToken.value = newAuthToken

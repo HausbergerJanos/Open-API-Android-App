@@ -28,8 +28,10 @@ class UpdateAccountFragment : BaseAccountFragment(){
 
     private fun subscribeObservers() {
         viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
-            stateChangeListener.onDataStateChange(dataState)
 
+            dataState?.let { updateAccountDataState ->
+                stateChangeListener.onDataStateChange(updateAccountDataState)
+            }
         })
 
         viewModel.viewState.observe(viewLifecycleOwner, Observer { viewState ->

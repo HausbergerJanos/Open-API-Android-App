@@ -8,7 +8,11 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
+import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.di.ViewModelProviderFactory
+import com.codingwithmitch.openapi.models.AUTH_TOKEN_BUNDLE_KEY
+import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.ui.BaseActivity
 import com.codingwithmitch.openapi.ui.auth.AuthActivity
 import com.codingwithmitch.openapi.ui.dashboard.account.BaseAccountFragment
@@ -23,9 +27,16 @@ import com.codingwithmitch.openapi.util.BottomNavController.*
 import com.codingwithmitch.openapi.util.setUpNavigation
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.activity_dashboard.*
+import javax.inject.Inject
 
 class DashboardActivity : BaseActivity(),
-    NavGraphProvider, OnNavigationGraphChanged, OnNavigationReselectedListener {
+    NavGraphProvider, OnNavigationGraphChanged, OnNavigationReselectedListener, DashboardDependencyProvider {
+
+    @Inject
+    lateinit var requestManager: RequestManager
+
+    @Inject
+    lateinit var providerFactory: ViewModelProviderFactory
 
     private val bottomNavController by lazy(LazyThreadSafetyMode.NONE) {
         BottomNavController(
@@ -48,6 +59,7 @@ class DashboardActivity : BaseActivity(),
         }
 
         subscribeObservers()
+        restoreSession(savedInstanceState)
     }
 
     private fun setUpActionBar() {
@@ -157,5 +169,24 @@ class DashboardActivity : BaseActivity(),
 
     override fun expandAppbar() {
         findViewById<AppBarLayout>(R.id.app_bar).setExpanded(true)
+    }
+
+    override fun getVMProviderFactory() = providerFactory
+
+    override fun getGlideRequestManager() = requestManager
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable(
+            AUTH_TOKEN_BUNDLE_KEY,
+            sessionManager.cachedToken.value)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun restoreSession(savedInstanceState: Bundle?) {
+        savedInstanceState?.let { inState ->
+            (inState[AUTH_TOKEN_BUNDLE_KEY] as AuthToken?).let { authToken ->
+                sessionManager.setToken(authToken)
+            }
+        }
     }
 }

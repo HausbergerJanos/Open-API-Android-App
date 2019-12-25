@@ -40,12 +40,16 @@ class ChangePasswordFragment : BaseAccountFragment(){
 
     private fun subscribeObservers() {
         viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
-            stateChangeListener.onDataStateChange(dataState)
-            dataState?.data?.let { data ->
-                data.response?.let { event ->
-                    if (event.peekContent().message.equals(RESPONSE_PASSWORD_UPDATE_SUCCESS)) {
-                        stateChangeListener.hideSoftKeyboard()
-                        findNavController().popBackStack()
+
+            dataState?.let {changePasswordDataSate ->
+                stateChangeListener.onDataStateChange(changePasswordDataSate)
+
+                changePasswordDataSate.data?.let { data ->
+                    data.response?.let { event ->
+                        if (event.peekContent().message.equals(RESPONSE_PASSWORD_UPDATE_SUCCESS)) {
+                            stateChangeListener.hideSoftKeyboard()
+                            findNavController().popBackStack()
+                        }
                     }
                 }
             }

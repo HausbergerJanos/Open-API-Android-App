@@ -15,6 +15,9 @@ import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.di.Injectable
 import com.codingwithmitch.openapi.di.ViewModelProviderFactory
 import com.codingwithmitch.openapi.ui.DataStateChangeListener
+import com.codingwithmitch.openapi.ui.dashboard.DashboardDependencyProvider
+import com.codingwithmitch.openapi.ui.dashboard.account.state.ACCOUNT_VIEW_STATE_BUNDLE_KEY
+import com.codingwithmitch.openapi.ui.dashboard.account.state.AccountViewState
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 
@@ -22,23 +25,32 @@ abstract class BaseAccountFragment : Fragment(), Injectable {
 
     val TAG: String = javaClass.simpleName + "-->"
 
-    @Inject
-    lateinit var providerFactory: ViewModelProviderFactory
-
     lateinit var viewModel: AccountViewModel
 
+    lateinit var dependencyProvider: DashboardDependencyProvider
     lateinit var stateChangeListener: DataStateChangeListener
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel = activity?.run {
+            ViewModelProvider(this, dependencyProvider.getVMProviderFactory()).get(AccountViewModel::class.java)
+        }?: throw Exception("Invalid Activity")
+
+        cancelActiveJobs()
+
+        // Restore state after process death
+        savedInstanceState?.let { inState ->
+            (inState[ACCOUNT_VIEW_STATE_BUNDLE_KEY] as AccountViewState?)?.let { viewState ->
+                viewModel.setViewState(viewState)
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpActionBarWithNavController(R.id.accountFragment, activity as AppCompatActivity)
         (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(true)
-
-        viewModel = activity?.run {
-            ViewModelProvider(this, providerFactory).get(AccountViewModel::class.java)
-        }?: throw Exception("Invalid Activity")
-
-        cancelActiveJobs()
     }
 
     fun cancelActiveJobs() {
@@ -61,5 +73,23 @@ abstract class BaseAccountFragment : Fragment(), Injectable {
         } catch (e: ClassCastException){
             Log.e(TAG, "$context must implement DataStateChangeListener" )
         }
+
+        try{
+            dependencyProvider = context as DashboardDependencyProvider
+        } catch (e: ClassCastException){
+            Log.e(TAG, "$context must implement DashboardDependencyProvider" )
+        }
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (isViewModelInitialized()) {
+            outState.putParcelable(
+                ACCOUNT_VIEW_STATE_BUNDLE_KEY,
+                viewModel.viewState.value
+            )
+        }
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun isViewModelInitialized() = ::viewModel.isInitialized
 }

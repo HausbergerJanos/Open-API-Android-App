@@ -81,14 +81,16 @@ class ViewBlogFragment : BaseBlogFragment(){
                 stateChangeListener.onDataStateChange(blogDataState)
 
                 blogDataState.data?.let { data ->
-                    data.data?.getContentIfNotHandled()?.let { blogViewState ->
-                        viewModel.setIsAuthorOfBlogPost(
-                            blogViewState.viewBlogFields.isAuthorOfBlogPost
-                        )
+                    data.data?.let { event ->
+                        event.getContentIfNotHandled()?.let { blogViewState ->
+                            viewModel.setIsAuthorOfBlogPost(
+                                blogViewState.viewBlogFields.isAuthorOfBlogPost
+                            )
+                        }
                     }
 
-                    data.response?.peekContent()?.let { response ->
-                        if (response.message == SUCCESS_BLOG_DELETED) {
+                    data.response?.peekContent()?.let { event ->
+                        if (event.message == SUCCESS_BLOG_DELETED) {
                             viewModel.removeDeletedBlogPost()
                             findNavController().popBackStack()
                         }
@@ -116,7 +118,7 @@ class ViewBlogFragment : BaseBlogFragment(){
     }
 
     private fun setBlogProperties(blogPost: BlogPost) {
-        requestManager
+        dependencyProvider.getGlideRequestManager()
             .load(blogPost.image)
             .into(blog_image)
 

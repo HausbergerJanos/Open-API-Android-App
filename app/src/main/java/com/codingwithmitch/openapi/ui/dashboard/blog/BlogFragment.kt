@@ -75,8 +75,8 @@ class BlogFragment : BaseBlogFragment(), Interaction, SwipeRefreshLayout.OnRefre
     private fun subscribeObservers() {
         viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
             dataState?.let { blogDataState ->
-                handlePagination(blogDataState)
                 stateChangeListener.onDataStateChange(blogDataState)
+                handlePagination(blogDataState)
             }
         })
 
@@ -84,7 +84,7 @@ class BlogFragment : BaseBlogFragment(), Interaction, SwipeRefreshLayout.OnRefre
             viewState?.let { blogViewState ->
                 recyclerAdapter.apply {
                     preloadGlideImages(
-                        requestManager = requestManager,
+                        requestManager = dependencyProvider.getGlideRequestManager(),
                         list = viewState.blogFields.blogList
                     )
 
@@ -170,7 +170,7 @@ class BlogFragment : BaseBlogFragment(), Interaction, SwipeRefreshLayout.OnRefre
             addItemDecoration(topItemSpacingDecoration)
 
             recyclerAdapter = BlogRecyclerViewAdapter(
-                requestManager = requestManager,
+                requestManager = dependencyProvider.getGlideRequestManager(),
                 interaction = this@BlogFragment
             )
 
