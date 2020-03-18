@@ -74,7 +74,7 @@ constructor(
                             data = null,
                             response = Response(
                                 message = response.body.response,
-                                responseType = ResponseType.Dialog()
+                                responseType = ResponseType.Dialog
                             )
                         )
                     )

@@ -7,7 +7,7 @@ import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.models.BlogPost
 
 @Database(entities = [AuthToken::class, AccountProperties::class, BlogPost::class], version = 1)
-abstract class AppDatabase: RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
 
     companion object {
 

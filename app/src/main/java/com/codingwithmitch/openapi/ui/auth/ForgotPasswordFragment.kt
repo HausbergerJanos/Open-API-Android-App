@@ -46,7 +46,7 @@ class ForgotPasswordFragment : BaseAuthFragment() {
 
             val dataState = DataState.error<Any>(
                 response = Response(
-                    errorMessage, ResponseType.Dialog()
+                    errorMessage, ResponseType.Dialog
                 )
             )
 

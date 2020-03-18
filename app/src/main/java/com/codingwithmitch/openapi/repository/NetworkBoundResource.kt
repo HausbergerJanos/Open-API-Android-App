@@ -137,7 +137,7 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
     fun onErrorReturn(errorMessage: String?, shouldUseDialog: Boolean, shouldUseToast: Boolean) {
         var msg = errorMessage?.let { it } ?: ERROR_UNKNOWN
         var useDialog = shouldUseDialog
-        var responseType: ResponseType = ResponseType.None()
+        var responseType: ResponseType = ResponseType.None
 
         if (ErrorHandling.isNetworkError(msg)) {
             msg = ERROR_CHECK_NETWORK_CONNECTION
@@ -145,11 +145,11 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
         }
 
         if (shouldUseToast) {
-            responseType = ResponseType.Toast()
+            responseType = ResponseType.Toast
         }
 
         if (useDialog) {
-            responseType = ResponseType.Dialog()
+            responseType = ResponseType.Dialog
         }
 
         onCompleteJob(
@@ -187,6 +187,10 @@ abstract class NetworkBoundResource<ResponseObject, CacheObject, ViewStateType>(
         return job
     }
 
+    /**
+     * Returns a LiveData object that represents the resource which is wrapped
+     * in a ViewState
+     */
     fun asLiveData() = result as LiveData<DataState<ViewStateType>>
 
     abstract suspend fun createCacheRequestAndReturn()

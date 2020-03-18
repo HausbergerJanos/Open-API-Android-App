@@ -113,7 +113,7 @@ constructor(
                     onCompleteJob(
                         DataState.data(
                             data = null,
-                            response = Response(response.body.response, ResponseType.Toast())
+                            response = Response(response.body.response, ResponseType.Toast)
                         )
                     )
                 }
@@ -171,7 +171,7 @@ constructor(
                             data = null,
                             response = Response(
                                 response.body.response,
-                                ResponseType.Toast()
+                                ResponseType.Toast
                             )
                         )
                     )

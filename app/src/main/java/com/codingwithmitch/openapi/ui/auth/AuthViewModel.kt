@@ -1,11 +1,8 @@
 package com.codingwithmitch.openapi.ui.auth
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import com.codingwithmitch.openapi.api.auth.request.LoginRequest
 import com.codingwithmitch.openapi.api.auth.request.RegistrationRequest
-import com.codingwithmitch.openapi.api.auth.responses.LoginResponse
-import com.codingwithmitch.openapi.api.auth.responses.RegistrationResponse
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.repository.auth.AuthRepository
 import com.codingwithmitch.openapi.ui.BaseViewModel
@@ -15,8 +12,6 @@ import com.codingwithmitch.openapi.ui.auth.state.AuthStateEvent.*
 import com.codingwithmitch.openapi.ui.auth.state.AuthViewState
 import com.codingwithmitch.openapi.ui.auth.state.LoginFields
 import com.codingwithmitch.openapi.ui.auth.state.RegistrationFields
-import com.codingwithmitch.openapi.util.AbsentLiveData
-import com.codingwithmitch.openapi.util.GenericApiResponse
 import javax.inject.Inject
 
 class AuthViewModel
@@ -30,24 +25,26 @@ constructor(
     }
 
     override fun handleStateEvent(stateEvent: AuthStateEvent): LiveData<DataState<AuthViewState>> {
-        return when(stateEvent) {
+        return when (stateEvent) {
 
             is LoginAttemptEvent -> {
                 authRepository.login(
                     LoginRequest(
-                    stateEvent.email,
-                    stateEvent.password
-                )
+                        stateEvent.email,
+                        stateEvent.password
+                    )
                 )
             }
 
-            is RegistrationAttempEvent -> {
-                authRepository.registration(RegistrationRequest(
-                    stateEvent.email,
-                    stateEvent.userName,
-                    stateEvent.password,
-                    stateEvent.passwordConfirmation
-                ))
+            is RegistrationAttemptEvent -> {
+                authRepository.registration(
+                    RegistrationRequest(
+                        stateEvent.email,
+                        stateEvent.userName,
+                        stateEvent.password,
+                        stateEvent.passwordConfirmation
+                    )
+                )
             }
 
             is CheckPreviousAuthEvent -> {
@@ -55,7 +52,7 @@ constructor(
             }
 
             is None -> {
-                return object: LiveData<DataState<AuthViewState>>() {
+                return object : LiveData<DataState<AuthViewState>>() {
                     override fun onActive() {
                         super.onActive()
                         value = DataState.data(
@@ -104,7 +101,7 @@ constructor(
     }
 
     fun handlePendingData() {
-       setStateEvent(None())
+        setStateEvent(None())
     }
 
     override fun onCleared() {

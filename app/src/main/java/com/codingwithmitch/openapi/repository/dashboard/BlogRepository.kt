@@ -242,7 +242,7 @@ constructor(
                         dataState = DataState.error(
                             Response(
                                 message = ERROR_UNKNOWN,
-                                responseType = Dialog()
+                                responseType = Dialog
                             )
                         )
                     )
@@ -271,7 +271,7 @@ constructor(
                             data = null,
                             response = Response(
                                 SUCCESS_BLOG_DELETED,
-                                Toast()
+                                Toast
                             )
                         )
                     )
@@ -328,7 +328,7 @@ constructor(
                             ),
                             response = Response(
                                 message = response.body.response,
-                                responseType = Toast()
+                                responseType = Toast
                             )
                         )
                     )

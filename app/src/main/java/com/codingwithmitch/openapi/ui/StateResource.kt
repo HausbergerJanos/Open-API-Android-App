@@ -5,21 +5,34 @@ package com.codingwithmitch.openapi.ui
  */
 data class Loading(val isLoading: Boolean)
 
+/**
+ * Data class for errors.
+ */
 data class StateError(val response: Response)
 /**
- * It is wrapped in an Event class so that the user can see the data only once.
+ * Contains data and the [Response] return from request.
+ * It is wrapped in an [Event] class so that the user can see the data only once.
  */
 data class Data<T>(val data: Event<T>?, val response: Event<Response>?)
 
+/**
+ * If there is a response message (for example about success operation or failure)
+ * declares the message and the way how should be it shown via the [ResponseType].
+ */
 data class Response(val message: String?, val responseType: ResponseType)
 
+/**
+ * Handles how to show response message.
+ */
 sealed class ResponseType {
+    /** In this case, we show response message with a toast. */
+    object Toast : ResponseType()
 
-    class Toast: ResponseType()
+    /** In this case, we show response message with a dialog. */
+    object Dialog : ResponseType()
 
-    class Dialog: ResponseType()
-
-    class None: ResponseType()
+    /** In this case, we not show any response message. */
+    object None : ResponseType()
 }
 
 /**
@@ -52,8 +65,6 @@ open class Event<out T>(private val content: T) {
     }
 
     companion object{
-
-        private val TAG: String = javaClass.simpleName + "-->"
 
         // we don't want an event if the data is null
         fun <T> dataEvent(data: T?): Event<T>?{

@@ -129,7 +129,7 @@ class CreateBlogFragment : BaseCreateBlogFragment(){
                     StateError(
                         Response(
                             message = message,
-                            responseType = ResponseType.Dialog()
+                            responseType = ResponseType.Dialog
                         )
                     )
                 ),

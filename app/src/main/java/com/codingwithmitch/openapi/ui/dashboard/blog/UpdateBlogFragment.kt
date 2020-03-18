@@ -180,7 +180,7 @@ class UpdateBlogFragment : BaseBlogFragment(){
                     StateError(
                         Response(
                             message = message,
-                            responseType = ResponseType.Dialog()
+                            responseType = ResponseType.Dialog
                         )
                     )
                 ),

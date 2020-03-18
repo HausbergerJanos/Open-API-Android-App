@@ -17,6 +17,9 @@ import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Manage, what it means to be authenticated or not authenticated.
+ */
 @Singleton
 class SessionManager
 @Inject

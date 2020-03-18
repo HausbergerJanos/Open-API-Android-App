@@ -45,7 +45,7 @@ constructor(
 
         val loginFieldsErrors = LoginFields(loginRequest.email, loginRequest.password).isValidForLogin()
         if (loginFieldsErrors != LoginFields.LoginError.none()) {
-            return returnErrorResponse(loginFieldsErrors, ResponseType.Dialog())
+            return returnErrorResponse(loginFieldsErrors, ResponseType.Dialog)
         }
 
         return object: NetworkBoundResource<LoginResponse, Any, AuthViewState>(
@@ -96,7 +96,7 @@ constructor(
                 if (result < 0) {
                     return onCompleteJob(
                         DataState.error(
-                            Response(ERROR_SAVE_AUTH_TOKEN, ResponseType.Dialog())
+                            Response(ERROR_SAVE_AUTH_TOKEN, ResponseType.Dialog)
                         )
                     )
                 }
@@ -131,7 +131,7 @@ constructor(
 
         val registrationFieldsErrors = RegistrationFields(registrationRequest.email, registrationRequest.userName, registrationRequest.password, registrationRequest.confirmationPassword).isValidForRegistration()
         if (registrationFieldsErrors != RegistrationFields.RegistrationError.none()) {
-            return returnErrorResponse(registrationFieldsErrors, ResponseType.Dialog())
+            return returnErrorResponse(registrationFieldsErrors, ResponseType.Dialog)
         }
 
         return object: NetworkBoundResource<RegistrationResponse, Any, AuthViewState>(
@@ -182,7 +182,7 @@ constructor(
                 if (result < 0) {
                     return onCompleteJob(
                         DataState.error(
-                            Response(ERROR_SAVE_AUTH_TOKEN, ResponseType.Dialog())
+                            Response(ERROR_SAVE_AUTH_TOKEN, ResponseType.Dialog)
                         )
                     )
                 }
@@ -265,7 +265,7 @@ constructor(
                             data = null,
                             response = Response(
                                 RESPONSE_CHECK_PREVIOUS_AUTH_USER_DONE,
-                                ResponseType.None()
+                                ResponseType.None
                             )
                         )
                     )
@@ -295,7 +295,7 @@ constructor(
                 super.onActive()
                 value = DataState.data(
                     data = null,
-                    response = Response(RESPONSE_CHECK_PREVIOUS_AUTH_USER_DONE, ResponseType.None())
+                    response = Response(RESPONSE_CHECK_PREVIOUS_AUTH_USER_DONE, ResponseType.None)
                 )
             }
         }

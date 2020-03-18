@@ -10,6 +10,9 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.*
 
+/**
+ * This is where all of the Retrofit dashboard requests going to be held.
+ */
 interface ApiDashboardService {
 
     @GET("account/properties")

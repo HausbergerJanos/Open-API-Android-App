@@ -11,6 +11,9 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 
+/**
+ * This is where all of the Retrofit authentication requests going to be held.
+ */
 interface ApiAuthService {
 
     @POST("account/login")
