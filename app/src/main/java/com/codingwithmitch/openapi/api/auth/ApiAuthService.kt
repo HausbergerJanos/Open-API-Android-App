@@ -5,6 +5,7 @@ import com.codingwithmitch.openapi.api.auth.request.LoginRequest
 import com.codingwithmitch.openapi.api.auth.request.RegistrationRequest
 import com.codingwithmitch.openapi.api.auth.responses.LoginResponse
 import com.codingwithmitch.openapi.api.auth.responses.RegistrationResponse
+import com.codingwithmitch.openapi.di.auth.AuthScope
 import com.codingwithmitch.openapi.util.GenericApiResponse
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -14,6 +15,7 @@ import retrofit2.http.POST
 /**
  * This is where all of the Retrofit authentication requests going to be held.
  */
+@AuthScope
 interface ApiAuthService {
 
     @POST("account/login")

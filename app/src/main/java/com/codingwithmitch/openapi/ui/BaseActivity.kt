@@ -3,25 +3,34 @@ package com.codingwithmitch.openapi.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.UIMessageType.*
 import com.codingwithmitch.openapi.util.Constants.Constants.Companion.PERMISSIONS_REQUEST_READ_STORAGE
-import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-abstract class BaseActivity: DaggerAppCompatActivity(), DataStateChangeListener, UICommunicationListener {
+abstract class BaseActivity: AppCompatActivity(), DataStateChangeListener, UICommunicationListener {
 
     val TAG: String = javaClass.simpleName
 
     @Inject
     lateinit var sessionManager: SessionManager
+
+    abstract fun inject()
+
+    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
+        inject()
+        super.onCreate(savedInstanceState, persistentState)
+    }
 
     override fun onDataStateChange(dataState: DataState<*>?) {
         dataState?.let {

@@ -8,13 +8,15 @@ import com.codingwithmitch.openapi.repository.dashboard.AccountRepository
 import com.codingwithmitch.openapi.repository.dashboard.BlogRepository
 import com.codingwithmitch.openapi.repository.dashboard.CreateBlogRepository
 import com.codingwithmitch.openapi.session.SessionManager
+import com.codingwithmitch.openapi.ui.dashboard.blog.BlogFragment
 import dagger.Module
 import dagger.Provides
 import retrofit2.Retrofit
 
 @Module
-class DashboardModule {
+object DashboardModule {
 
+    @JvmStatic
     @DashboardScope
     @Provides
     fun provideApiDashboardService(retrofitBuilder: Retrofit.Builder): ApiDashboardService {
@@ -23,6 +25,7 @@ class DashboardModule {
             .create(ApiDashboardService::class.java)
     }
 
+    @JvmStatic
     @DashboardScope
     @Provides
     fun provideAccountRepository(
@@ -37,12 +40,14 @@ class DashboardModule {
         )
     }
 
+    @JvmStatic
     @DashboardScope
     @Provides
     fun provideBlogPostDao(db: AppDatabase): BlogPostDao {
         return db.getBlogPostDao()
     }
 
+    @JvmStatic
     @DashboardScope
     @Provides
     fun provideBlogRepository(
@@ -57,9 +62,10 @@ class DashboardModule {
         )
     }
 
+    @JvmStatic
     @DashboardScope
     @Provides
-    fun provideCreateBlogReposirory(
+    fun provideCreateBlogRepository(
         apiDashboardService: ApiDashboardService,
         blogPostDao: BlogPostDao,
         sessionManager: SessionManager

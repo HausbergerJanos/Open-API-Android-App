@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.switchMap
 import com.codingwithmitch.openapi.api.GenericResponse
 import com.codingwithmitch.openapi.api.dashboard.ApiDashboardService
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.models.AccountProperties
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.persistance.AccountPropertiesDao
@@ -24,6 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@DashboardScope
 class AccountRepository
 @Inject
 constructor(

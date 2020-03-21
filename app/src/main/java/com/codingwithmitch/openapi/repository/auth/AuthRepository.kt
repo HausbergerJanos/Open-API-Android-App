@@ -8,6 +8,7 @@ import com.codingwithmitch.openapi.api.auth.request.LoginRequest
 import com.codingwithmitch.openapi.api.auth.request.RegistrationRequest
 import com.codingwithmitch.openapi.api.auth.responses.LoginResponse
 import com.codingwithmitch.openapi.api.auth.responses.RegistrationResponse
+import com.codingwithmitch.openapi.di.auth.AuthScope
 import com.codingwithmitch.openapi.models.AccountProperties
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.persistance.AccountPropertiesDao
@@ -28,6 +29,7 @@ import com.codingwithmitch.openapi.util.SuccessHandling.Companion.RESPONSE_CHECK
 import kotlinx.coroutines.Job
 import javax.inject.Inject
 
+@AuthScope
 class AuthRepository
 @Inject
 constructor(

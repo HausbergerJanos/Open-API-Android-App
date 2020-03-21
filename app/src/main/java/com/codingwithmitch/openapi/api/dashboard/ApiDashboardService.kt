@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import com.codingwithmitch.openapi.api.GenericResponse
 import com.codingwithmitch.openapi.api.dashboard.responses.BlogCreateUpdateResponse
 import com.codingwithmitch.openapi.api.dashboard.responses.BlogListSearchResponse
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.models.AccountProperties
 import com.codingwithmitch.openapi.util.GenericApiResponse
 import okhttp3.MultipartBody
@@ -13,6 +14,7 @@ import retrofit2.http.*
 /**
  * This is where all of the Retrofit dashboard requests going to be held.
  */
+@DashboardScope
 interface ApiDashboardService {
 
     @GET("account/properties")

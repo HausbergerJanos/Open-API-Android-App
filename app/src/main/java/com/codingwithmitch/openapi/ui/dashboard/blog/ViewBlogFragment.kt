@@ -4,33 +4,62 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.models.BlogPost
 import com.codingwithmitch.openapi.ui.AreYouSureCallback
 import com.codingwithmitch.openapi.ui.UIMessageType
 import com.codingwithmitch.openapi.ui.UIMessageType.*
 import com.codingwithmitch.openapi.ui.UiMessage
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BLOG_VIEW_STATE_BUNDLE_KEY
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent.*
-import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.getBlogPost
-import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.isAuthorOfBlogPost
-import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.setIsAuthorOfBlogPost
-import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.setUpdatedBlogFields
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.*
 import com.codingwithmitch.openapi.util.DateUtils
 import com.codingwithmitch.openapi.util.SuccessHandling.Companion.SUCCESS_BLOG_DELETED
 import kotlinx.android.synthetic.main.fragment_view_blog.*
 
-class ViewBlogFragment : BaseBlogFragment(){
+@DashboardScope
+class ViewBlogFragment
+constructor(
+    private val viewModelFactory: ViewModelProvider.Factory,
+    private val requestManager: RequestManager
+): BaseBlogFragment(R.layout.fragment_view_blog) {
 
+    private val viewModel: BlogViewModel by viewModels {
+        viewModelFactory
+    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_view_blog, container, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        cancelActiveJobs()
+
+        // Restore state after process death
+        savedInstanceState?.let { inState ->
+            (inState[BLOG_VIEW_STATE_BUNDLE_KEY] as BlogViewState?)?.let { viewState ->
+                viewModel.setViewState(viewState)
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable(
+            BLOG_VIEW_STATE_BUNDLE_KEY,
+            viewModel.viewState.value
+        )
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun cancelActiveJobs() {
+        viewModel.cancelActiveJobs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -118,7 +147,7 @@ class ViewBlogFragment : BaseBlogFragment(){
     }
 
     private fun setBlogProperties(blogPost: BlogPost) {
-        dependencyProvider.getGlideRequestManager()
+        requestManager
             .load(blogPost.image)
             .into(blog_image)
 

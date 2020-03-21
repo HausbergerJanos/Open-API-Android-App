@@ -6,11 +6,18 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.*
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.ui.*
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BLOG_VIEW_STATE_BUNDLE_KEY
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent.*
+import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.BlogViewModel
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.getUpdatedBlogUri
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.onBlogPostUpdateSuccess
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.setUpdatedBlogFields
@@ -27,15 +34,40 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 
-class UpdateBlogFragment : BaseBlogFragment(){
+@DashboardScope
+class UpdateBlogFragment
+constructor(
+    private val viewModelFactory: ViewModelProvider.Factory,
+    private val requestManager: RequestManager
+): BaseBlogFragment(R.layout.fragment_update_blog) {
 
+    private val viewModel: BlogViewModel by viewModels {
+        viewModelFactory
+    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_update_blog, container, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        cancelActiveJobs()
+
+        // Restore state after process death
+        savedInstanceState?.let { inState ->
+            (inState[BLOG_VIEW_STATE_BUNDLE_KEY] as BlogViewState?)?.let { viewState ->
+                viewModel.setViewState(viewState)
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable(
+            BLOG_VIEW_STATE_BUNDLE_KEY,
+            viewModel.viewState.value
+        )
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun cancelActiveJobs() {
+        viewModel.cancelActiveJobs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -95,7 +127,7 @@ class UpdateBlogFragment : BaseBlogFragment(){
         updatedBlogBody: String?,
         updatedImageUri: Uri?
     ) {
-        dependencyProvider.getGlideRequestManager().load(updatedImageUri).into(blog_image)
+        requestManager.load(updatedImageUri).into(blog_image)
         blog_title.setText(updatedBlogTitle)
         blog_body.setText(updatedBlogBody)
     }

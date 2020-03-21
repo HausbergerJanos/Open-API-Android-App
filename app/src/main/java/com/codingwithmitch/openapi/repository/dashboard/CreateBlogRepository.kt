@@ -3,6 +3,7 @@ package com.codingwithmitch.openapi.repository.dashboard
 import androidx.lifecycle.LiveData
 import com.codingwithmitch.openapi.api.dashboard.ApiDashboardService
 import com.codingwithmitch.openapi.api.dashboard.responses.BlogCreateUpdateResponse
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.models.BlogPost
 import com.codingwithmitch.openapi.persistance.BlogPostDao
@@ -25,6 +26,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import javax.inject.Inject
 
+@DashboardScope
 class CreateBlogRepository
 @Inject
 constructor(

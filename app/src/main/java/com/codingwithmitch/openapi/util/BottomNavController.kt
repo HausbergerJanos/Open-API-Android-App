@@ -5,15 +5,16 @@ import android.app.Activity
 import android.content.Context
 import android.os.Parcelable
 import androidx.annotation.IdRes
-import androidx.annotation.NavigationRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.openapi.R
+import com.codingwithmitch.openapi.fragments.dashboard.account.AccountNavHostFragment
+import com.codingwithmitch.openapi.fragments.dashboard.blog.BlogNavHostFragment
+import com.codingwithmitch.openapi.fragments.dashboard.create_blog.CreateBlogNavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.parcel.Parcelize
 
@@ -23,15 +24,13 @@ class BottomNavController(
     val context: Context,
     @IdRes val containerId: Int,
     @IdRes val appStartDestinationId: Int,
-    val graphChangeListener: OnNavigationGraphChanged?,
-    val navGraphProvider: NavGraphProvider
+    val graphChangeListener: OnNavigationGraphChanged?
 ) {
-
-    private val TAG = javaClass.simpleName + "-->"
+    private val TAG: String = "AppDebug"
+    lateinit var navigationBackStack: BackStack
     lateinit var activity: Activity
     lateinit var fragmentManager: FragmentManager
     lateinit var navItemChangeListener: OnNavigationItemChanged
-    lateinit var navigationBackStack: BackStack
 
     init {
         if (context is Activity) {
@@ -46,11 +45,11 @@ class BottomNavController(
         }?: BackStack.of(appStartDestinationId)
     }
 
-    fun onNavigationItemSelected(itemId: Int = navigationBackStack.last()): Boolean {
+    fun onNavigationItemSelected(menuItemId: Int = navigationBackStack.last()): Boolean {
 
         // Replace fragment representing a navigation item
-        val fragment = fragmentManager.findFragmentByTag(itemId.toString())
-            ?: NavHostFragment.create(navGraphProvider.getNavGraphId(itemId))
+        val fragment = fragmentManager.findFragmentByTag(menuItemId.toString())
+            ?: createNavHost(menuItemId)
         fragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.fade_in,
@@ -58,20 +57,41 @@ class BottomNavController(
                 R.anim.fade_in,
                 R.anim.fade_out
             )
-            .replace(containerId, fragment, itemId.toString())
+            .replace(containerId, fragment, menuItemId.toString())
             .addToBackStack(null)
-            .commitAllowingStateLoss()
+            .commit()
 
-        // Add to BackStack
-        navigationBackStack.moveToLastPosition(itemId)
+        // Add to back stack
+        navigationBackStack.moveLast(menuItemId)
 
         // Update checked icon
-        navItemChangeListener.onItemChange(itemId)
+        navItemChangeListener.onItemChanged(menuItemId)
 
-        // Communicate with Activity
+        // communicate with Activity
         graphChangeListener?.onGraphChange()
 
         return true
+    }
+
+    private fun createNavHost(menuItemId: Int): Fragment {
+        return when(menuItemId){
+
+            R.id.menu_nav_account -> {
+                AccountNavHostFragment.create(R.navigation.nav_account)
+            }
+
+            R.id.menu_nav_blog -> {
+                BlogNavHostFragment.create(R.navigation.nav_blog)
+            }
+
+            R.id.menu_nav_create_blog -> {
+                CreateBlogNavHostFragment.create(R.navigation.nav_create_blog)
+            }
+
+            else -> {
+                BlogNavHostFragment.create(R.navigation.nav_blog)
+            }
+        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -121,46 +141,40 @@ class BottomNavController(
 
         fun removeLast() = removeAt(size - 1)
 
-        fun moveToLastPosition(item: Int) {
-            remove(item)
-            add(item)
+        fun moveLast(item: Int) {
+            remove(item) // if present, remove
+            add(item) // add to end of list
         }
+
     }
 
-    // For setting the checked icon in the bottom nav.
-    // Only for internally.
+
+    // For setting the checked icon in the bottom nav
     interface OnNavigationItemChanged {
-        fun onItemChange(itemId: Int)
+        fun onItemChanged(itemId: Int)
+    }
+
+    // Execute when Navigation Graph changes.
+    interface OnNavigationGraphChanged{
+        fun onGraphChange()
+    }
+
+    interface OnNavigationReselectedListener{
+
+        fun onReselectNavItem(navController: NavController, fragment: Fragment)
     }
 
     fun setOnItemNavigationChanged(listener: (itemId: Int) -> Unit) {
-        this.navItemChangeListener = object: OnNavigationItemChanged {
-            override fun onItemChange(itemId: Int) {
+        this.navItemChangeListener = object : OnNavigationItemChanged {
+            override fun onItemChanged(itemId: Int) {
                 listener.invoke(itemId)
             }
         }
     }
 
-    // Get id of each graph.
-    // ex: R.navigation.nav_blog
-    // ex: R.navigation.nav_create_blog
-    interface NavGraphProvider {
-        @NavigationRes
-        fun getNavGraphId(itemId: Int): Int
-    }
-
-    // Execute when Navigation Graph changes.
-    // ex: Select a new item on the bottom navigation
-    // ex: Home -> Account
-    interface OnNavigationGraphChanged {
-        fun onGraphChange()
-    }
-
-    interface OnNavigationReselectedListener {
-        fun onReselectNavItem(navController: NavController, fragment: Fragment)
-    }
 }
 
+// Convenience extension to set up the navigation
 fun BottomNavigationView.setUpNavigation(
     bottomNavController: BottomNavController,
     onReselectListener: BottomNavController.OnNavigationReselectedListener
@@ -182,6 +196,7 @@ fun BottomNavigationView.setUpNavigation(
                 fragment
             )
         }
+        bottomNavController.onNavigationItemSelected()
     }
 
     bottomNavController.setOnItemNavigationChanged { itemId ->

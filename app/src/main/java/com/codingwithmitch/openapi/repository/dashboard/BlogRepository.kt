@@ -7,6 +7,7 @@ import com.codingwithmitch.openapi.api.GenericResponse
 import com.codingwithmitch.openapi.api.dashboard.ApiDashboardService
 import com.codingwithmitch.openapi.api.dashboard.responses.BlogCreateUpdateResponse
 import com.codingwithmitch.openapi.api.dashboard.responses.BlogListSearchResponse
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.models.BlogPost
 import com.codingwithmitch.openapi.persistance.BlogPostDao
@@ -34,6 +35,7 @@ import okhttp3.RequestBody
 import java.lang.Exception
 import javax.inject.Inject
 
+@DashboardScope
 class BlogRepository
 @Inject
 constructor(
