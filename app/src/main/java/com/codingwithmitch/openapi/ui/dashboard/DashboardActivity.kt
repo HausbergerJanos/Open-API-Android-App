@@ -22,6 +22,7 @@ import com.codingwithmitch.openapi.ui.dashboard.blog.BaseBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.blog.UpdateBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.blog.ViewBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.create_blog.BaseCreateBlogFragment
+import com.codingwithmitch.openapi.util.BOTTOM_NAV_BACKSTACK_KEY
 import com.codingwithmitch.openapi.util.BottomNavController
 import com.codingwithmitch.openapi.util.BottomNavController.*
 import com.codingwithmitch.openapi.util.setUpNavigation
@@ -53,10 +54,7 @@ class DashboardActivity : BaseActivity(),
         setContentView(R.layout.activity_dashboard)
 
         setUpActionBar()
-        bottom_navigation_view?.setUpNavigation(bottomNavController, this)
-        if (savedInstanceState == null) {
-            bottomNavController.onNavigationItemSelected()
-        }
+        setupBottomNavigationView(savedInstanceState)
 
         subscribeObservers()
         restoreSession(savedInstanceState)
@@ -179,6 +177,7 @@ class DashboardActivity : BaseActivity(),
         outState.putParcelable(
             AUTH_TOKEN_BUNDLE_KEY,
             sessionManager.cachedToken.value)
+        outState.putIntArray(BOTTOM_NAV_BACKSTACK_KEY, bottomNavController.navigationBackStack.toIntArray())
         super.onSaveInstanceState(outState)
     }
 
@@ -186,6 +185,21 @@ class DashboardActivity : BaseActivity(),
         savedInstanceState?.let { inState ->
             (inState[AUTH_TOKEN_BUNDLE_KEY] as AuthToken?).let { authToken ->
                 sessionManager.setToken(authToken)
+            }
+        }
+    }
+
+    private fun setupBottomNavigationView(savedInstanceState: Bundle?){
+        bottom_navigation_view.setUpNavigation(bottomNavController, this)
+        if (savedInstanceState == null) {
+            bottomNavController.setupBottomNavigationBackStack(null)
+            bottomNavController.onNavigationItemSelected()
+        }
+        else{
+            (savedInstanceState[BOTTOM_NAV_BACKSTACK_KEY] as IntArray?)?.let { items ->
+                val backstack = BackStack()
+                backstack.addAll(items.toTypedArray())
+                bottomNavController.setupBottomNavigationBackStack(backstack)
             }
         }
     }

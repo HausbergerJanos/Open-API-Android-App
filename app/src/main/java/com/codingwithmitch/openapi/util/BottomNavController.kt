@@ -1,7 +1,9 @@
 package com.codingwithmitch.openapi.util
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.os.Parcelable
 import androidx.annotation.IdRes
 import androidx.annotation.NavigationRes
 import androidx.fragment.app.Fragment
@@ -10,8 +12,12 @@ import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.openapi.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.android.parcel.Parcelize
+
+const val BOTTOM_NAV_BACKSTACK_KEY = "com.codingwithmitch.openapi.util.BottomNavController.bottom_nav_backstack"
 
 class BottomNavController(
     val context: Context,
@@ -22,18 +28,22 @@ class BottomNavController(
 ) {
 
     private val TAG = javaClass.simpleName + "-->"
-
     lateinit var activity: Activity
     lateinit var fragmentManager: FragmentManager
     lateinit var navItemChangeListener: OnNavigationItemChanged
-
-    private val navigationBackStack = BackStack.of(appStartDestinationId)
+    lateinit var navigationBackStack: BackStack
 
     init {
         if (context is Activity) {
             activity = context
             fragmentManager = (activity as FragmentActivity).supportFragmentManager
         }
+    }
+
+    fun setupBottomNavigationBackStack(previousBackStack: BackStack?){
+        navigationBackStack = previousBackStack?.let{
+            it
+        }?: BackStack.of(appStartDestinationId)
     }
 
     fun onNavigationItemSelected(itemId: Int = navigationBackStack.last()): Boolean {
@@ -64,29 +74,25 @@ class BottomNavController(
         return true
     }
 
+    @SuppressLint("RestrictedApi")
     fun onBackPressed() {
-        val childFragmentManager = fragmentManager.findFragmentById(containerId)!!
-            .childFragmentManager
+        val navController = fragmentManager.findFragmentById(containerId)!!
+            .findNavController()
 
         when {
-            // We should always try to go back on the child fragment manager stack before going to
-            // the navigation stack. It's important to use the child fragment manager instead of the
-            // NavController because if the user change tabs super fast commit of the
-            // supportFragmentManager may mess up with the NavController child fragment manager back
-            // stack
-            childFragmentManager.popBackStackImmediate() -> {
-
+            navController.backStack.size > 2 ->{
+                navController.popBackStack()
             }
 
             // Fragment back stack is empty so try to go back on the navigation stack
             navigationBackStack.size > 1 -> {
+
                 // Remove last item from back stack
                 navigationBackStack.removeLast()
 
                 // Update the container with new fragment
                 onNavigationItemSelected()
             }
-
             // If the stack has only one and it's not the navigation home we should
             // ensure that the application always leave from startDestination
             navigationBackStack.last() != appStartDestinationId -> {
@@ -94,13 +100,15 @@ class BottomNavController(
                 navigationBackStack.add(0, appStartDestinationId)
                 onNavigationItemSelected()
             }
-
             // Navigation stack is empty, so finish the activity
-            else -> activity.finish()
+            else -> {
+                activity.finish()
+            }
         }
     }
 
-    private class BackStack : ArrayList<Int>() {
+    @Parcelize
+    class BackStack : ArrayList<Int>(), Parcelable {
 
         companion object {
 
