@@ -8,7 +8,6 @@ import com.codingwithmitch.openapi.repository.dashboard.AccountRepository
 import com.codingwithmitch.openapi.repository.dashboard.BlogRepository
 import com.codingwithmitch.openapi.repository.dashboard.CreateBlogRepository
 import com.codingwithmitch.openapi.session.SessionManager
-import com.codingwithmitch.openapi.ui.dashboard.blog.BlogFragment
 import dagger.Module
 import dagger.Provides
 import retrofit2.Retrofit

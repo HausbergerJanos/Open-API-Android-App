@@ -160,6 +160,82 @@ constructor(
         }.asLiveData()
     }
 
+    fun restoreBlogListFromCache(
+        query: String,
+        filterAndOrder: String,
+        page: Int
+    ): LiveData<DataState<BlogViewState>> {
+        return object: NetworkBoundResource<BlogListSearchResponse, List<BlogPost>, BlogViewState>(
+            isNetworkAvailable = sessionManager.isConnectedToTheInternet(),
+            isNetworkRequest = false,
+            shouldCancelIfNoInternet = false,
+            shouldLoadFromCache = true
+        ) {
+
+            // If network is down, view cache only and return
+            override suspend fun createCacheRequestAndReturn() {
+                withContext(Main) {
+                    // Finishing by viewing db cache
+                    result.addSource(loadFromCache()) { viewState ->
+                        viewState?.let { blogViewState ->
+                            blogViewState.blogFields.isQueryInProgress = false
+                            if (page * PAGINATION_PAGE_SIZE > viewState.blogFields.blogList.size) {
+                                blogViewState.blogFields.isQueryExhausted = true
+                            }
+                        }
+
+                        onCompleteJob(
+                            dataState = DataState.data(
+                                data = viewState,
+                                response = null
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Not used in this case
+            override suspend fun handleApiSuccessResponse(response: ApiSuccessResponse<BlogListSearchResponse>) {
+
+            }
+
+            override fun createCall(): LiveData<GenericApiResponse<BlogListSearchResponse>> {
+                return AbsentLiveData.create()
+            }
+
+            override fun loadFromCache(): LiveData<BlogViewState> {
+                return blogPostDao.returnOrderedBlogQuery(
+                    query = query,
+                    filterAndOrder = filterAndOrder,
+                    page = page
+                )
+                    .switchMap {  list ->
+                        object: LiveData<BlogViewState>() {
+                            override fun onActive() {
+                                super.onActive()
+                                value = BlogViewState(
+                                    blogFields = BlogFields(
+                                        blogList = list,
+                                        isQueryInProgress = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+            }
+
+            // Not used in this case
+            override suspend fun updateLocalDb(cacheObject: List<BlogPost>?) {
+
+            }
+
+            override fun setJob(job: Job) {
+                addJob("restoreBlogListFromCache", job)
+            }
+
+        }.asLiveData()
+    }
+
     fun isAuthorOfBlogPost(
         authToken: AuthToken,
         slug: String

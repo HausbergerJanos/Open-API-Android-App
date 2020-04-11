@@ -1,9 +1,8 @@
-package com.codingwithmitch.openapi.ui.dashboard.blog
+package com.codingwithmitch.openapi.ui.dashboard.blog.view
 
 import android.app.SearchManager
 import android.content.Context.SEARCH_SERVICE
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.*
@@ -20,7 +19,6 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.customview.getCustomView
 import com.bumptech.glide.RequestManager
-import com.codingwithmitch.openapi.BaseApplication
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.models.BlogPost
@@ -28,15 +26,15 @@ import com.codingwithmitch.openapi.persistance.BlogQueryUtils.Companion.BLOG_FIL
 import com.codingwithmitch.openapi.persistance.BlogQueryUtils.Companion.BLOG_FILTER_USERNAME
 import com.codingwithmitch.openapi.persistance.BlogQueryUtils.Companion.BLOG_ORDER_ASC
 import com.codingwithmitch.openapi.ui.DataState
-import com.codingwithmitch.openapi.ui.dashboard.blog.BlogRecyclerViewAdapter.Interaction
+import com.codingwithmitch.openapi.ui.dashboard.blog.BaseBlogFragment
+import com.codingwithmitch.openapi.ui.dashboard.blog.logic.BlogRecyclerViewAdapter
+import com.codingwithmitch.openapi.ui.dashboard.blog.logic.BlogRecyclerViewAdapter.Interaction
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BLOG_VIEW_STATE_BUNDLE_KEY
-import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
 import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.*
 import com.codingwithmitch.openapi.util.ErrorHandling
 import com.codingwithmitch.openapi.util.TopItemSpacingDecoration
 import kotlinx.android.synthetic.main.fragment_blog.*
-import javax.inject.Inject
 
 @DashboardScope
 class BlogFragment
@@ -44,6 +42,9 @@ constructor(
     private val viewModelFactory: ViewModelProvider.Factory,
     private val requestManager: RequestManager
 ): BaseBlogFragment(R.layout.fragment_blog), Interaction, SwipeRefreshLayout.OnRefreshListener {
+
+    private lateinit var recyclerAdapter: BlogRecyclerViewAdapter
+    private lateinit var searchView: SearchView
 
     private val viewModel: BlogViewModel by viewModels {
         viewModelFactory
@@ -63,9 +64,12 @@ constructor(
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        val viewState = viewModel.viewState.value
+        viewState?.blogFields?.blogList = emptyList()
+
         outState.putParcelable(
             BLOG_VIEW_STATE_BUNDLE_KEY,
-            viewModel.viewState.value
+            viewState
         )
         super.onSaveInstanceState(outState)
     }
@@ -73,9 +77,6 @@ constructor(
     override fun cancelActiveJobs() {
         viewModel.cancelActiveJobs()
     }
-
-    private lateinit var recyclerAdapter: BlogRecyclerViewAdapter
-    private lateinit var searchView: SearchView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -85,9 +86,21 @@ constructor(
 
         initRecyclerView()
         subscribeObservers()
+    }
 
-        if (savedInstanceState == null) {
-            viewModel.loadFirstPage()
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshFromCache()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveLayoutManagerState()
+    }
+
+    private fun saveLayoutManagerState() {
+        blog_post_recyclerview.layoutManager?.onSaveInstanceState()?.let { lmState ->
+            viewModel.setLayoutManagerState(lmState)
         }
     }
 
@@ -198,10 +211,11 @@ constructor(
             removeItemDecoration(topItemSpacingDecoration)
             addItemDecoration(topItemSpacingDecoration)
 
-            recyclerAdapter = BlogRecyclerViewAdapter(
-                requestManager = requestManager,
-                interaction = this@BlogFragment
-            )
+            recyclerAdapter =
+                BlogRecyclerViewAdapter(
+                    requestManager = requestManager,
+                    interaction = this@BlogFragment
+                )
 
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
 
@@ -245,6 +259,12 @@ constructor(
     override fun onItemSelected(position: Int, item: BlogPost) {
         viewModel.setBlogPost(item)
         findNavController().navigate(R.id.action_blogFragment_to_viewBlogFragment)
+    }
+
+    override fun restoreListPosition() {
+        viewModel.viewState.value?.blogFields?.layoutManager?.let { lmState ->
+            blog_post_recyclerview.layoutManager?.onRestoreInstanceState(lmState)
+        }
     }
 
     override fun onRefresh() {

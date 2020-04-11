@@ -8,6 +8,8 @@ sealed class BlogStateEvent {
 
     object CheckAuthorOfBlogPost : BlogStateEvent()
 
+    object RestoreBlogListFromCache : BlogStateEvent()
+
     object DeleteBlogPostEvent : BlogStateEvent()
 
     data class UpdatedBlogPostEvent(

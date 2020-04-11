@@ -1,6 +1,7 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel
 
 import android.net.Uri
+import android.os.Parcelable
 import com.codingwithmitch.openapi.models.BlogPost
 
 fun BlogViewModel.setQuery(query: String) {
@@ -36,6 +37,18 @@ fun BlogViewModel.setQueryExhausted(isExhausted: Boolean) {
 fun BlogViewModel.setQueryInProgress(isInProgress: Boolean) {
     val update = getCurrentViewState()
     update.blogFields.isQueryInProgress = isInProgress
+    setViewState(update)
+}
+
+fun BlogViewModel.setLayoutManagerState(layoutManagerState: Parcelable) {
+    val update =  getCurrentViewState()
+    update.blogFields.layoutManager = layoutManagerState
+    setViewState(update)
+}
+
+fun BlogViewModel.clearLayoutManagerState() {
+    val update =  getCurrentViewState()
+    update.blogFields.layoutManager = null
     setViewState(update)
 }
 

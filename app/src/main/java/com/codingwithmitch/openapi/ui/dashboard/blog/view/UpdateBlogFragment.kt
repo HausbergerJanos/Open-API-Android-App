@@ -1,4 +1,4 @@
-package com.codingwithmitch.openapi.ui.dashboard.blog
+package com.codingwithmitch.openapi.ui.dashboard.blog.view
 
 import android.app.Activity
 import android.content.Intent
@@ -14,6 +14,7 @@ import com.bumptech.glide.RequestManager
 import com.codingwithmitch.openapi.R
 import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.ui.*
+import com.codingwithmitch.openapi.ui.dashboard.blog.BaseBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BLOG_VIEW_STATE_BUNDLE_KEY
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogStateEvent.*
 import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState

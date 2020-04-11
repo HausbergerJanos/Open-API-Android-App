@@ -1,4 +1,4 @@
-package com.codingwithmitch.openapi.ui.dashboard.blog
+package com.codingwithmitch.openapi.ui.dashboard.blog.logic
 
 import android.view.LayoutInflater
 import android.view.View
@@ -131,7 +131,10 @@ class BlogRecyclerViewAdapter(
         if (isQueryExhausted) {
             newList?.add(NO_MORE_RESULTS_BLOG_MARKER)
         }
-        differ.submitList(newList)
+        val commitCallback = Runnable {
+            interaction?.restoreListPosition()
+        }
+        differ.submitList(newList, commitCallback)
     }
 
     fun preloadGlideImages(
@@ -170,5 +173,6 @@ class BlogRecyclerViewAdapter(
 
     interface Interaction {
         fun onItemSelected(position: Int, item: BlogPost)
+        fun restoreListPosition()
     }
 }

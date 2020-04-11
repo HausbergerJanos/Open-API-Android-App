@@ -18,11 +18,12 @@ import com.codingwithmitch.openapi.ui.dashboard.account.BaseAccountFragment
 import com.codingwithmitch.openapi.ui.dashboard.account.ChangePasswordFragment
 import com.codingwithmitch.openapi.ui.dashboard.account.UpdateAccountFragment
 import com.codingwithmitch.openapi.ui.dashboard.blog.BaseBlogFragment
-import com.codingwithmitch.openapi.ui.dashboard.blog.UpdateBlogFragment
-import com.codingwithmitch.openapi.ui.dashboard.blog.ViewBlogFragment
+import com.codingwithmitch.openapi.ui.dashboard.blog.view.UpdateBlogFragment
+import com.codingwithmitch.openapi.ui.dashboard.blog.view.ViewBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.create_blog.BaseCreateBlogFragment
 import com.codingwithmitch.openapi.util.BOTTOM_NAV_BACKSTACK_KEY
 import com.codingwithmitch.openapi.util.BottomNavController
+import com.codingwithmitch.openapi.util.BottomNavController.*
 import com.codingwithmitch.openapi.util.setUpNavigation
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -31,8 +32,8 @@ import javax.inject.Inject
 import javax.inject.Named
 
 class DashboardActivity : BaseActivity(),
-    BottomNavController.OnNavigationGraphChanged,
-    BottomNavController.OnNavigationReselectedListener {
+    OnNavigationGraphChanged,
+    OnNavigationReselectedListener {
 
     @Inject
     @Named("AccountFragmentFactory")
@@ -145,7 +146,7 @@ class DashboardActivity : BaseActivity(),
             bottomNavController.onNavigationItemSelected()
         } else {
             (savedInstanceState[BOTTOM_NAV_BACKSTACK_KEY] as IntArray?)?.let { items ->
-                val backstack = BottomNavController.BackStack()
+                val backstack = BackStack()
                 backstack.addAll(items.toTypedArray())
                 bottomNavController.setupBottomNavigationBackStack(backstack)
             }
