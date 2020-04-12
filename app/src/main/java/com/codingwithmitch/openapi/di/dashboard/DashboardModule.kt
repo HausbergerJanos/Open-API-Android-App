@@ -4,9 +4,7 @@ import com.codingwithmitch.openapi.api.dashboard.ApiDashboardService
 import com.codingwithmitch.openapi.persistance.AccountPropertiesDao
 import com.codingwithmitch.openapi.persistance.AppDatabase
 import com.codingwithmitch.openapi.persistance.BlogPostDao
-import com.codingwithmitch.openapi.repository.dashboard.AccountRepository
-import com.codingwithmitch.openapi.repository.dashboard.BlogRepository
-import com.codingwithmitch.openapi.repository.dashboard.CreateBlogRepository
+import com.codingwithmitch.openapi.repository.dashboard.*
 import com.codingwithmitch.openapi.session.SessionManager
 import dagger.Module
 import dagger.Provides
@@ -32,7 +30,7 @@ object DashboardModule {
         accountPropertiesDao: AccountPropertiesDao,
         sessionManager: SessionManager
     ): AccountRepository {
-        return AccountRepository(
+        return AccountRepositoryImpl(
             apiDashboardService,
             accountPropertiesDao,
             sessionManager
@@ -54,7 +52,7 @@ object DashboardModule {
         blogPostDao: BlogPostDao,
         sessionManager: SessionManager
     ): BlogRepository {
-        return BlogRepository(
+        return BlogRepositoryImpl(
             apiDashboardService,
             blogPostDao,
             sessionManager
@@ -69,7 +67,7 @@ object DashboardModule {
         blogPostDao: BlogPostDao,
         sessionManager: SessionManager
     ): CreateBlogRepository {
-        return CreateBlogRepository(
+        return CreateBlogRepositoryImpl(
             apiDashboardService,
             blogPostDao,
             sessionManager

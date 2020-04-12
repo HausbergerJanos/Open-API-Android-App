@@ -14,16 +14,12 @@ import com.codingwithmitch.openapi.persistance.AppDatabase
 import com.codingwithmitch.openapi.persistance.AppDatabase.Companion.DATABASE_NAME
 import com.codingwithmitch.openapi.persistance.AuthTokenDao
 import com.codingwithmitch.openapi.util.Constants
-import com.codingwithmitch.openapi.util.Constants.Constants.*
-import com.codingwithmitch.openapi.util.LiveDataCallAdapterFactory
 import com.codingwithmitch.openapi.util.PreferenceKeys
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -75,7 +71,6 @@ object AppModule{
 
         return Retrofit.Builder()
             .baseUrl(Constants.Constants.BASE_URL)
-            .addCallAdapterFactory(LiveDataCallAdapterFactory())
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClientBuilder.build())
     }

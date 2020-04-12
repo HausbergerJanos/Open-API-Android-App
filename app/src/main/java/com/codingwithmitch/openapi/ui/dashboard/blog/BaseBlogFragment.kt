@@ -7,31 +7,44 @@ import android.view.View
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.codingwithmitch.openapi.R
-import com.codingwithmitch.openapi.ui.DataStateChangeListener
 import com.codingwithmitch.openapi.ui.UICommunicationListener
-import com.codingwithmitch.openapi.ui.dashboard.blog.state.BLOG_VIEW_STATE_BUNDLE_KEY
-import com.codingwithmitch.openapi.ui.dashboard.blog.state.BlogViewState
+import com.codingwithmitch.openapi.ui.dashboard.blog.viewmodel.BlogViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 
+@FlowPreview
+@ExperimentalCoroutinesApi
 abstract class BaseBlogFragment
 constructor(
-    @LayoutRes private val layoutRes: Int
+    @LayoutRes
+    private val layoutRes: Int,
+    private val viewModelFactory: ViewModelProvider.Factory
 ) : Fragment(layoutRes) {
 
-    lateinit var stateChangeListener: DataStateChangeListener
-    lateinit var uiCommunicationListener: UICommunicationListener
+    val TAG: String = "AppDebug"
 
-    abstract fun cancelActiveJobs()
+    val viewModel: BlogViewModel by viewModels {
+        viewModelFactory
+    }
+
+    lateinit var uiCommunicationListener: UICommunicationListener
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setUpActionBarWithNavController(R.id.blogFragment, activity as AppCompatActivity)
+        setupActionBarWithNavController(R.id.blogFragment, activity as AppCompatActivity)
+        setupChannel()
     }
 
-    private fun setUpActionBarWithNavController(fragmentId: Int, activity: AppCompatActivity) {
+
+    private fun setupChannel() = viewModel.setupChannel()
+
+    fun setupActionBarWithNavController(fragmentId: Int, activity: AppCompatActivity) {
         val appBarConfiguration = AppBarConfiguration(setOf(fragmentId))
         NavigationUI.setupActionBarWithNavController(
             activity,
@@ -43,15 +56,9 @@ constructor(
     override fun onAttach(context: Context) {
         super.onAttach(context)
         try {
-            stateChangeListener = context as DataStateChangeListener
-        } catch (e: ClassCastException) {
-            e.printStackTrace()
-        }
-
-        try {
             uiCommunicationListener = context as UICommunicationListener
         } catch (e: ClassCastException) {
-            e.printStackTrace()
+            Log.e(TAG, "$context must implement UICommunicationListener")
         }
     }
 }

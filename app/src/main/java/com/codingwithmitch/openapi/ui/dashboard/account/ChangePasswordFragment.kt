@@ -1,54 +1,37 @@
 package com.codingwithmitch.openapi.ui.dashboard.account
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.openapi.R
-import com.codingwithmitch.openapi.di.dashboard.DashboardScope
 import com.codingwithmitch.openapi.ui.dashboard.account.state.ACCOUNT_VIEW_STATE_BUNDLE_KEY
 import com.codingwithmitch.openapi.ui.dashboard.account.state.AccountStateEvent
 import com.codingwithmitch.openapi.ui.dashboard.account.state.AccountViewState
+import com.codingwithmitch.openapi.util.StateMessageCallback
 import com.codingwithmitch.openapi.util.SuccessHandling.Companion.RESPONSE_PASSWORD_UPDATE_SUCCESS
 import kotlinx.android.synthetic.main.fragment_change_password.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import javax.inject.Inject
 
-@DashboardScope
+@FlowPreview
+@ExperimentalCoroutinesApi
 class ChangePasswordFragment
 @Inject
 constructor(
-    private val viewModelFactory: ViewModelProvider.Factory
-): BaseAccountFragment(R.layout.fragment_change_password){
-
-    val viewModel: AccountViewModel by viewModels {
-        viewModelFactory
-    }
+    viewModelFactory: ViewModelProvider.Factory
+): BaseAccountFragment(R.layout.fragment_change_password, viewModelFactory) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        cancelActiveJobs()
         // Restore state after process death
         savedInstanceState?.let { inState ->
             (inState[ACCOUNT_VIEW_STATE_BUNDLE_KEY] as AccountViewState?)?.let { viewState ->
                 viewModel.setViewState(viewState)
             }
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelable(
-            ACCOUNT_VIEW_STATE_BUNDLE_KEY,
-            viewModel.viewState.value
-        )
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun cancelActiveJobs() {
-        viewModel.cancelActiveJobs()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -67,21 +50,38 @@ constructor(
         subscribeObservers()
     }
 
-    private fun subscribeObservers() {
-        viewModel.dataState.observe(viewLifecycleOwner, Observer { dataState ->
+    private fun subscribeObservers(){
 
-            dataState?.let {changePasswordDataSate ->
-                stateChangeListener.onDataStateChange(changePasswordDataSate)
+        viewModel.numActiveJobs.observe(viewLifecycleOwner, Observer { jobCounter ->
+            uiCommunicationListener.displayProgressBar(viewModel.areAnyJobsActive())
+        })
 
-                changePasswordDataSate.data?.let { data ->
-                    data.response?.let { event ->
-                        if (event.peekContent().message.equals(RESPONSE_PASSWORD_UPDATE_SUCCESS)) {
-                            stateChangeListener.hideSoftKeyboard()
-                            findNavController().popBackStack()
+        viewModel.stateMessage.observe(viewLifecycleOwner, Observer { stateMessage ->
+
+            stateMessage?.let {
+
+                if(stateMessage.response.message.equals(RESPONSE_PASSWORD_UPDATE_SUCCESS)){
+                    uiCommunicationListener.hideSoftKeyboard()
+                    findNavController().popBackStack()
+                }
+
+                uiCommunicationListener.onResponseReceived(
+                    response = it.response,
+                    stateMessageCallback = object: StateMessageCallback {
+                        override fun removeMessageFromStack() {
+                            viewModel.clearStateMessage()
                         }
                     }
-                }
+                )
             }
         })
     }
 }
+
+//override fun onSaveInstanceState(outState: Bundle) {
+//    outState.putParcelable(
+//        ACCOUNT_VIEW_STATE_BUNDLE_KEY,
+//        viewModel.viewState.value
+//    )
+//    super.onSaveInstanceState(outState)
+//}

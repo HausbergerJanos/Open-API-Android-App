@@ -1,22 +1,61 @@
 package com.codingwithmitch.openapi.ui.dashboard.blog.state
 
+import com.codingwithmitch.openapi.util.StateEvent
 import okhttp3.MultipartBody
 
-sealed class BlogStateEvent {
+sealed class BlogStateEvent: StateEvent {
 
-    object BlogSearchEvent : BlogStateEvent()
+    class BlogSearchEvent(
+        val clearLayoutManagerState: Boolean = true
+    ) : BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error searching for blog posts."
+        }
 
-    object CheckAuthorOfBlogPost : BlogStateEvent()
+        override fun toString(): String {
+            return "BlogSearchEvent"
+        }
+    }
 
-    object RestoreBlogListFromCache : BlogStateEvent()
+    object CheckAuthorOfBlogPost : BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error checking if you are the author of this blog post."
+        }
 
-    object DeleteBlogPostEvent : BlogStateEvent()
+        override fun toString(): String {
+            return "CheckAuthorOfBlogPost"
+        }
 
-    data class UpdatedBlogPostEvent(
-        var title: String,
-        var body: String,
+    }
+
+    object DeleteBlogPostEvent : BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error deleting that blog post."
+        }
+
+        override fun toString(): String {
+            return "DeleteBlogPostEvent"
+        }
+    }
+
+    data class UpdateBlogPostEvent(
+        val title: String,
+        val body: String,
         val image: MultipartBody.Part?
-    ): BlogStateEvent()
+    ): BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "Error updating that blog post."
+        }
 
-    object None : BlogStateEvent()
+        override fun toString(): String {
+            return "UpdateBlogPostEvent"
+        }
+
+    }
+
+    object None : BlogStateEvent() {
+        override fun errorInfo(): String {
+            return "None."
+        }
+    }
 }

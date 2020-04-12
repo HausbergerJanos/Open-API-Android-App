@@ -2,6 +2,7 @@ package com.codingwithmitch.openapi.ui.dashboard
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -14,13 +15,10 @@ import com.codingwithmitch.openapi.models.AUTH_TOKEN_BUNDLE_KEY
 import com.codingwithmitch.openapi.models.AuthToken
 import com.codingwithmitch.openapi.ui.BaseActivity
 import com.codingwithmitch.openapi.ui.auth.AuthActivity
-import com.codingwithmitch.openapi.ui.dashboard.account.BaseAccountFragment
 import com.codingwithmitch.openapi.ui.dashboard.account.ChangePasswordFragment
 import com.codingwithmitch.openapi.ui.dashboard.account.UpdateAccountFragment
-import com.codingwithmitch.openapi.ui.dashboard.blog.BaseBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.blog.view.UpdateBlogFragment
 import com.codingwithmitch.openapi.ui.dashboard.blog.view.ViewBlogFragment
-import com.codingwithmitch.openapi.ui.dashboard.create_blog.BaseCreateBlogFragment
 import com.codingwithmitch.openapi.util.BOTTOM_NAV_BACKSTACK_KEY
 import com.codingwithmitch.openapi.util.BottomNavController
 import com.codingwithmitch.openapi.util.BottomNavController.*
@@ -28,9 +26,13 @@ import com.codingwithmitch.openapi.util.setUpNavigation
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_dashboard.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import javax.inject.Inject
 import javax.inject.Named
 
+@ExperimentalCoroutinesApi
+@FlowPreview
 class DashboardActivity : BaseActivity(),
     OnNavigationGraphChanged,
     OnNavigationReselectedListener {
@@ -47,7 +49,6 @@ class DashboardActivity : BaseActivity(),
     @Named("CreateBlogFragmentFactory")
     lateinit var createBlogFragmentFactory: FragmentFactory
 
-
     private lateinit var bottomNavigationView: BottomNavigationView
 
     private val bottomNavController by lazy(LazyThreadSafetyMode.NONE) {
@@ -60,35 +61,14 @@ class DashboardActivity : BaseActivity(),
     }
 
     override fun onGraphChange() {
-        cancelActiveJobs()
-        expandAppbar()
-    }
-
-    private fun cancelActiveJobs() {
-        val fragments = bottomNavController.fragmentManager
-            .findFragmentById(bottomNavController.containerId)
-            ?.childFragmentManager
-            ?.fragments
-        if (fragments != null) {
-            for (fragment in fragments) {
-                if (fragment is BaseAccountFragment) {
-                    fragment.cancelActiveJobs()
-                }
-                if (fragment is BaseBlogFragment) {
-                    fragment.cancelActiveJobs()
-                }
-                if (fragment is BaseCreateBlogFragment) {
-                    fragment.cancelActiveJobs()
-                }
-            }
-        }
-        displayProgressBar(false)
+        expandAppBar()
     }
 
     override fun onReselectNavItem(
         navController: NavController,
         fragment: Fragment
     ) {
+        Log.d(TAG, "logInfo: onReSelectItem")
         when (fragment) {
 
             is ViewBlogFragment -> {
@@ -173,7 +153,9 @@ class DashboardActivity : BaseActivity(),
     }
 
     fun subscribeObservers() {
+
         sessionManager.cachedToken.observe(this, Observer { authToken ->
+            Log.d(TAG, "MainActivity, subscribeObservers: ViewState: ${authToken}")
             if (authToken == null || authToken.account_pk == -1 || authToken.token == null) {
                 navAuthActivity()
                 finish()
@@ -181,7 +163,7 @@ class DashboardActivity : BaseActivity(),
         })
     }
 
-    override fun expandAppbar() {
+    override fun expandAppBar() {
         findViewById<AppBarLayout>(R.id.app_bar).setExpanded(true)
     }
 

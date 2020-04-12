@@ -11,17 +11,17 @@ import com.codingwithmitch.openapi.models.AccountProperties
 interface AccountPropertiesDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAndReplace(accountProperties: AccountProperties): Long
+    suspend fun insertAndReplace(accountProperties: AccountProperties): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertOrIgnore(accountProperties: AccountProperties): Long
+    suspend fun insertOrIgnore(accountProperties: AccountProperties): Long
 
     @Query("SELECT * FROM account_properties WHERE pk = :pk")
-    fun searchByPk(pk: Int): LiveData<AccountProperties>
+    suspend fun searchByPk(pk: Int): AccountProperties
 
     @Query("SELECT * FROM account_properties WHERE email = :email")
-    fun searchByEmail(email: String): AccountProperties?
+    suspend fun searchByEmail(email: String): AccountProperties?
 
     @Query("UPDATE account_properties SET email = :email, username = :userName WHERE pk = :pk")
-    fun updateAccountProperties(pk: Int, email: String, userName: String)
+    suspend fun updateAccountProperties(pk: Int, email: String, userName: String)
 }

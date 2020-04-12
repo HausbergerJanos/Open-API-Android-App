@@ -7,31 +7,41 @@ import android.view.View
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.codingwithmitch.openapi.R
-import com.codingwithmitch.openapi.ui.DataStateChangeListener
-import com.codingwithmitch.openapi.ui.dashboard.account.state.ACCOUNT_VIEW_STATE_BUNDLE_KEY
-import com.codingwithmitch.openapi.ui.dashboard.account.state.AccountViewState
+import com.codingwithmitch.openapi.ui.UICommunicationListener
+import kotlinx.coroutines.*
 
+@FlowPreview
+@ExperimentalCoroutinesApi
 abstract class BaseAccountFragment
 constructor(
-    @LayoutRes private val layoutRes: Int
-): Fragment(layoutRes) {
+    @LayoutRes
+    private val layoutRes: Int,
+    private val viewModelFactory: ViewModelProvider.Factory
+): Fragment(layoutRes){
 
-    lateinit var stateChangeListener: DataStateChangeListener
+    val TAG: String = "AppDebug"
+
+    val viewModel: AccountViewModel by viewModels{
+        viewModelFactory
+    }
+
+    lateinit var uiCommunicationListener: UICommunicationListener
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setUpActionBarWithNavController(R.id.accountFragment, activity as AppCompatActivity)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(true)
+        setupActionBarWithNavController(R.id.accountFragment, activity as AppCompatActivity)
+        setupChannel()
     }
 
-    abstract fun cancelActiveJobs()
+    private fun setupChannel() = viewModel.setupChannel()
 
-    private fun setUpActionBarWithNavController(fragmentId: Int, activity: AppCompatActivity) {
+    fun setupActionBarWithNavController(fragmentId: Int, activity: AppCompatActivity){
         val appBarConfiguration = AppBarConfiguration(setOf(fragmentId))
         NavigationUI.setupActionBarWithNavController(
             activity,
@@ -43,9 +53,10 @@ constructor(
     override fun onAttach(context: Context) {
         super.onAttach(context)
         try{
-            stateChangeListener = context as DataStateChangeListener
-        } catch (e: ClassCastException){
-            e.printStackTrace()
+            uiCommunicationListener = context as UICommunicationListener
+        }catch(e: ClassCastException){
+            Log.e(TAG, "$context must implement UICommunicationListener" )
         }
     }
+
 }

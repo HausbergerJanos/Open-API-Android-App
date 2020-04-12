@@ -1,9 +1,17 @@
 package com.codingwithmitch.openapi.ui
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import com.codingwithmitch.openapi.util.DataChannelManager
+import com.codingwithmitch.openapi.util.DataState
+import com.codingwithmitch.openapi.util.StateEvent
+import com.codingwithmitch.openapi.util.StateMessage
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Generic [ViewModel] class which should be used as a parent for other view models.
@@ -14,62 +22,80 @@ import androidx.lifecycle.ViewModel
  * [ViewState] represents data which is inside the view.
  * (For example data fields on the actual screen.)
  */
-abstract class BaseViewModel<StateEvent, ViewState> : ViewModel() {
+@FlowPreview
+@ExperimentalCoroutinesApi
+abstract class BaseViewModel<ViewState> : ViewModel() {
+    val TAG: String = "AppDebug"
 
-    protected val _stateEvent: MutableLiveData<StateEvent> = MutableLiveData()
-    protected val _viewState: MutableLiveData<ViewState> = MutableLiveData()
+    private val _viewState: MutableLiveData<ViewState> = MutableLiveData()
 
-    /**
-     * Returns [ViewState] as a [LiveData] to observe it any change
-     */
+    val dataChannelManager: DataChannelManager<ViewState> =
+        object : DataChannelManager<ViewState>() {
+
+            override fun handleNewData(data: ViewState) {
+                this@BaseViewModel.handleNewData(data)
+            }
+        }
+
     val viewState: LiveData<ViewState>
         get() = _viewState
 
-    /**
-     * Returns a [LiveData] object which wraps [ViewState] in a [DataState]
-     */
-    val dataState: LiveData<DataState<ViewState>> =
-        Transformations
-            .switchMap(_stateEvent) { stateEvent ->
-                // If there is a different StateEvent this function
-                // will be triggered
-                stateEvent?.let {
-                    handleStateEvent(stateEvent)
-                }
-            }
+    val numActiveJobs: LiveData<Int> = dataChannelManager.numActiveJobs
 
+    val stateMessage: LiveData<StateMessage?>
+        get() = dataChannelManager.messageStack.stateMessage
 
-    /**
-     * Set different [StateEvent] which triggers the [handleStateEvent] function
-     * in the child view model.
-     */
-    fun setStateEvent(stateEvent: StateEvent) {
-        _stateEvent.value = stateEvent
+    // FOR DEBUGGING
+    fun getMessageStackSize(): Int {
+        return dataChannelManager.messageStack.size
     }
 
-    /**
-     * Set a new [ViewState].
-     */
+    fun setupChannel() = dataChannelManager.setupChannel()
+
+    abstract fun handleNewData(data: ViewState)
+
+    abstract fun setStateEvent(stateEvent: StateEvent)
+
+    fun launchJob(
+        stateEvent: StateEvent,
+        jobFunction: Flow<DataState<ViewState>>
+    ) {
+        dataChannelManager.launchJob(stateEvent, jobFunction)
+    }
+
+    fun areAnyJobsActive(): Boolean {
+        return dataChannelManager.numActiveJobs.value?.let {
+            it > 0
+        } ?: false
+    }
+
+    fun isJobAlreadyActive(stateEvent: StateEvent): Boolean {
+        Log.d(TAG, "isJobAlreadyActive?: ${dataChannelManager.isJobAlreadyActive(stateEvent)} ")
+        return dataChannelManager.isJobAlreadyActive(stateEvent)
+    }
+
+    fun getCurrentViewStateOrNew(): ViewState {
+        val value = viewState.value?.let {
+            it
+        } ?: initNewViewState()
+        return value
+    }
+
     fun setViewState(viewState: ViewState) {
         _viewState.value = viewState
     }
 
-    /**
-     * Returns the corresponding [ViewState] variable. If it is null,
-     * creates a new instance variable with calling the [initNewViewState] function.
-     */
-    fun getCurrentViewState(): ViewState {
-        return viewState.value ?: initNewViewState()
+    fun clearStateMessage(index: Int = 0) {
+        dataChannelManager.clearStateMessage(index)
     }
 
-    /**
-     * Returns a new [ViewState] instance variable.
-     */
+    open fun cancelActiveJobs() {
+        if (areAnyJobsActive()) {
+            Log.d(TAG, "cancel active jobs: ${dataChannelManager.numActiveJobs.value ?: 0}")
+            dataChannelManager.cancelJobs()
+        }
+    }
+
     abstract fun initNewViewState(): ViewState
 
-    /**
-     * Handle [StateEvent] change in child view models.
-     * Returns a [LiveData] object which contains a [ViewState] wrapped in a [DataState]
-     */
-    abstract fun handleStateEvent(stateEvent: StateEvent): LiveData<DataState<ViewState>>
 }

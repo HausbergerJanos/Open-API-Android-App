@@ -1,113 +1,108 @@
 package com.codingwithmitch.openapi.ui.dashboard.create_blog
 
 import android.net.Uri
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.liveData
-import com.codingwithmitch.openapi.repository.dashboard.CreateBlogRepository
+import com.codingwithmitch.openapi.di.dashboard.DashboardScope
+import com.codingwithmitch.openapi.repository.dashboard.CreateBlogRepositoryImpl
 import com.codingwithmitch.openapi.session.SessionManager
 import com.codingwithmitch.openapi.ui.BaseViewModel
-import com.codingwithmitch.openapi.ui.DataState
-import com.codingwithmitch.openapi.ui.Loading
-import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogStateEvent
 import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogStateEvent.*
 import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogViewState
-import com.codingwithmitch.openapi.util.AbsentLiveData
+import com.codingwithmitch.openapi.ui.dashboard.create_blog.state.CreateBlogViewState.*
+import com.codingwithmitch.openapi.util.*
+import com.codingwithmitch.openapi.util.ErrorHandling.ErrorHandling.Companion.INVALID_STATE_EVENT
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import javax.inject.Inject
 
+@UseExperimental(ExperimentalCoroutinesApi::class)
+@FlowPreview
+@DashboardScope
 class CreateBlogViewModel
 @Inject
 constructor(
-    private val sessionManager: SessionManager,
-    private val createBlogRepository: CreateBlogRepository
-) : BaseViewModel<CreateBlogStateEvent, CreateBlogViewState>() {
+    val createBlogRepository: CreateBlogRepositoryImpl,
+    val sessionManager: SessionManager
+): BaseViewModel<CreateBlogViewState>() {
 
-    override fun initNewViewState(): CreateBlogViewState {
-        return CreateBlogViewState()
+
+    override fun handleNewData(data: CreateBlogViewState) {
+
+        setNewBlogFields(
+            data.blogFields.newBlogTitle,
+            data.blogFields.newBlogBody,
+            data.blogFields.newImageUri
+        )
     }
 
-    override fun handleStateEvent(stateEvent: CreateBlogStateEvent): LiveData<DataState<CreateBlogViewState>> {
-        return when(stateEvent) {
+    override fun setStateEvent(stateEvent: StateEvent) {
+        sessionManager.cachedToken.value?.let { authToken ->
+            val job: Flow<DataState<CreateBlogViewState>> = when(stateEvent){
 
-            is CreateNewBlogEvent -> {
-                sessionManager.cachedToken.value?.let { authToken ->
+                is CreateNewBlogEvent -> {
                     val title = RequestBody.create(
                         MediaType.parse("text/plain"),
                         stateEvent.title
                     )
-
                     val body = RequestBody.create(
                         MediaType.parse("text/plain"),
                         stateEvent.body
                     )
 
                     createBlogRepository.createNewBlogPost(
+                        stateEvent = stateEvent,
                         authToken = authToken,
                         title = title,
                         body = body,
                         image = stateEvent.image
                     )
-                }?: AbsentLiveData.create()
-            }
+                }
 
-            is None -> {
-                liveData {
-                    emit(
-                        DataState<CreateBlogViewState>(
-                            error = null,
-                            data = null,
-                            loading = Loading(false)
+                else -> {
+                    flow{
+                        emit(
+                            DataState.error(
+                                response = Response(
+                                    message = INVALID_STATE_EVENT,
+                                    uiComponentType = UIComponentType.None(),
+                                    messageType = MessageType.Error()
+                                ),
+                                stateEvent = stateEvent
+                            )
                         )
-                    )
+                    }
                 }
             }
-        }
+            launchJob(stateEvent, job)
+        }?: sessionManager.logout()
     }
 
-    fun setNewBlogFields(title: String?, body: String?, imageUri: Uri?) {
-        val update = getCurrentViewState()
+    override fun initNewViewState(): CreateBlogViewState {
+        return CreateBlogViewState()
+    }
 
-        title?.let {
-            update.newBlogTitle = it
-        }
-
-        body?.let {
-            update.newBlogBody = it
-        }
-
-        imageUri?.let {
-            update.newImageUri = it
-        }
-
+    fun setNewBlogFields(title: String?, body: String?, uri: Uri?){
+        val update = getCurrentViewStateOrNew()
+        val newBlogFields = update.blogFields
+        title?.let{ newBlogFields.newBlogTitle = it }
+        body?.let{ newBlogFields.newBlogBody = it }
+        uri?.let{ newBlogFields.newImageUri = it }
+        update.blogFields = newBlogFields
         setViewState(update)
     }
 
-    fun clearNewBlogFields() {
-        val update = getCurrentViewState()
-        update.newBlogTitle = null
-        update.newBlogBody = null
-        update.newImageUri = null
+    fun clearNewBlogFields(){
+        val update = getCurrentViewStateOrNew()
+        update.blogFields = NewBlogFields()
         setViewState(update)
-    }
-
-    fun getNewImageUri(): Uri? {
-        getCurrentViewState().let {
-            return it.newImageUri
-        }
-    }
-
-    fun cancelActiveJobs() {
-        createBlogRepository.cancelActiveJobs()
-        handlePendingData()
-    }
-
-    private fun handlePendingData() {
-        setStateEvent(None)
     }
 
     override fun onCleared() {
         super.onCleared()
         cancelActiveJobs()
     }
+
 }
